@@ -1,0 +1,281 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=windows-1251">
+<meta name="GENERATOR" content="Microsoft FrontPage Express 2.0">
+<title>Начало программирования на ассемблере для Windows</title>
+</head>
+<BODY background="../../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Начало 
+  программирования на ассемблере для Windows. </font></b></div></p>
+
+
+<p><font>Создание полноценного приложения 
+  для Windows, использующего все возможности данной системы,- довольно сложная 
+  задача. В то же время возможно написание каких-то небольших приложений или подпрограмм 
+  на ассемблере.</font></p>
+<p><font>Создание приложение для Windows 
+  в общем случае имеет больше стадий чем для Dos. Это объясняется тем, что при 
+  компоновке Windows-программы в нее включается не только код исходных модулей, 
+  но и ресурсы. Итак создание программы для Windows должно содержать следующие 
+  этапы :</font></p>
+<ul>
+  <li><font color="#FF3333">разработка исходного 
+    текста программы</font></li>
+  <li><font color="#FF3333">создание ресурсов, 
+    которые используются программой</font></li>
+  <li><font color="#FF3333">создание текстового 
+    файла описания используемых ресурсов</font></li>
+  <li><font color="#FF3333">создание текстового 
+    файла описания программного модуля</font></li>
+  <li><font color="#FF3333">компиляция и 
+    компоновка программы с использованием файла описания программного модуля</font></li>
+  <li><font color="#FF3333">компиляция файла 
+    ресурсов и включение его в готовый исполняемый файл</font></li>
+</ul>
+<p><font>В данной статье будет использоваться 
+  компилятор и компоновщик фирмы Borland - <font color="#FF3333">Turbo Assembler</font> 
+  и <font color="#FF3333">Turbo Link</font>. Конечно возможно некоторым покажеться 
+  странным использование данного продукта, но могу вас уверить на мой взгляд удобнее 
+  инструмента для программирования на ассемблере для Windows вы не найдете. Я 
+  использую версию Turbo Assembler 5.0.</font></p>
+<p><font>В этой статье я также не буду рассказывать 
+  о создании ресурсов и присоеденении их к исполняемому файлу, мы рассмотрим только 
+  простой пример программы, и попробуем найти какие-то сходства с программированием 
+  под Dos.</font></p>
+<p><font>Итак маленький пример:</font></p>
+<p><font>Файл <a href="hello.asm.rar">hello.asm</a></font></p>
+<hr>
+<p><font color="#FF3333"><b>.model large, 
+  WINDOWS PASCAL </b></font><font><br>
+  <font size="2">; Подключаем файл где описаны константы (типа &quot;MB_OK&quot;, 
+  &quot;MB_ICONEXCLAMATION&quot;) </font><br>
+  <font color="#FF3333"><strong>include windows.inc</strong></font></font> <font><br>
+  <font size="2">; Говорим что будем использовать функцию API MessageBox </font><br>
+  <font color="#FF3333"><strong>extrn MESSAGEBOX:proc</strong></font></font> <font><br>
+  <font size="2">; Сегмент данных </font><br>
+  <font color="#FF3333"><strong>.data</strong></font></font> <font><br>
+  <font size="2">; Пустое место для информации Program Manager'a</font><br>
+  <font color="#FF3333"><strong>freespace db 16 dup(0)</strong></font></font> 
+  <font><br>
+  <font size="2">; Заголовок диалогового окна </font><br>
+  <font color="#FF3333"><strong>lpszTitle db 'Generic Sample Assembly Application',0</strong></font></font> 
+  <font><br>
+  <font size="2">; Текст диалогового окна </font><br>
+  <font color="#FF3333"><strong>lpszText db 'Hello World !',0</strong></font></font> 
+  <font><br>
+  <font size="2">; Сегмент кода </font><br>
+  <font color="#FF3333"><strong>.code</strong></font></font> <font><br>
+  <font size="2">; Наш старый &quot;добрый&quot; start (На самом деле WinMain) 
+  </font><br>
+  <font color=green><strong>start:</strong></font></font> <font><br>
+  <font color="#FFFFFF" size="2">; Инициализируем задачу и получаем входные параметры</font></font><font color="#FF3333"><br>
+  <strong>call INITTASK<br>
+  or ax,ax<br>
+  </strong></font><font color="#FFFFFF" size="2">; 
+  Если инициализация прошла успешно </font><font color="#FF3333"><br>
+  <strong>jnz @@OK<br>
+  </strong></font><font color="#FFFFFF" size="2">; 
+  Если ошибка </font><font color="#FF3333"><br>
+  <strong>jmp @@Fail<br>
+  <font color=green>@@OK: </font><br>
+  </strong></font><font color="#FFFFFF" size="2">; 
+  Сохраняем HINSTANCE</font><font color="#FF3333"><br>
+  <strong>mov hInstance,di<br>
+  </strong></font><font color="#FFFFFF" size="2">; 
+  Инициализируем приложение</font><font color="#FF3333"><br>
+  <strong>call INITAPP,hInstance<br>
+  or ax,ax<br>
+  jnz @@InitOK<br>
+  <font color=green>@@Fail:</font><br>
+  </strong></font><font color="#FFFFFF" size="2">; 
+  Если инициализация завершилась неудачно</font><font color="#FF3333"><br>
+  <strong>mov ax, 4CFFh<br>
+  int 21h<br>
+  <font color=green>@@InitOK:</font><br>
+  </strong>; Выводим на экран диалоговое окно<br>
+  <strong>call MESSAGEBOX,0,ds offset lpszText,ds offset lpszTitle,MB_OK+MB_ICONEXCLAMATION</strong></font> 
+  <font><br>
+  <font size="2">; Хе-хе а вот и выход </font><br>
+  <font color="#FF3333"><strong>mov ax,4c00h</strong></font></font> <font><br>
+  <font color="#FF3333"><strong>int 21h</strong></font></font> <font><br>
+  <font color="#FF3333"><strong>end start</strong></font></font> </p>
+<hr>
+<p><font>Как видите разработка простых приложений 
+  для Windows практически не отличается от программирования для Dos. Однако есть 
+  маленькие особенности которые мы сейчас рассмотрим:</font></p>
+<p><font color="#FF3333"><strong>.model large, 
+  WINDOWS PASCAL </strong></font></p>
+<p><font>Про эту строчку много говорить и 
+  не надо, но она имеет одну особенность. Система Windows и ее функции используют 
+  алгоритм &quot;прямой&quot; передачи параметров через стэк, как в языке Pascal. 
+  Поэтому мы и вводим этот модификатор в директиву <strong>modal.</strong></font></p>
+<p><font color="#FF3333"><strong>include 
+  windows.inc</strong></font> </p>
+<p><font>Подключение файлов определений тоже 
+  не представляет ничего нового, но если вы не хотите самостоятельно перекапывать 
+  файлы Windows и выяснять какие константы имеют какие значение просто включите 
+  эту строчку в вашу программу.</font></p>
+<p><font color="#FF3333"><strong>extrn MESSAGEBOX:proc</strong></font> 
+</p>
+<p><font>Наверно одна из самых существенных 
+  строк этого примера. Она говорит компилятору, что мы будем использовать внешнюю 
+  функцию MessageBox. Я думаю у вас не возникает никаких сомнений - существование 
+  этой функции в Windows API.</font></p>
+<p><font><b><font color="#FF0000">freespace 
+  db 16 dup(0)</font></b></font></p>
+<p><font>Зачем в начале сегмента данных стоят 
+  16 байт с нулями ? Для приложений Win16 эти 16 байт являются обязательным условием 
+  нормальной работы программы. При загрузке Вашего приложения Windows заменяет 
+  эти 16 байт своей информацией. Для более подробного разъяснения этой проблеммы 
+  обратитесь к книге Мэта Патрика (Matt Patrick) &quot;Внутри Windows&quot; (&quot;Windows 
+  Internals&quot;), 1993, Addison Wesley.</font></p>
+<p align="left"><font>Всем известно, что 
+  каждое приложение для Windows начинается с WinMain. Через параметры переданные 
+  этой функции можно было получить командную строку, идентификатор предидущего 
+  экземпляра программы и так далее и тому подобнее. Немного сложнее процедура 
+  инициализации приложения происходит в Assembler.</font></p>
+<p align="left"><font>Первым шагом в инициализации 
+  приложения под Windows будем считать вызов функции <strong><font color="#FF3333">INITTASK</font>. 
+  </strong>После выполнения эта функция возвращает:</font></p>
+<ul>
+  <li><font color="#FF3333">При успешном 
+    завершении AX=1</font></li>
+  <li><font color="#FF3333">DX содержит <strong>nCmdShow</strong>, 
+    то есть параметр, указывающий на стиль просмотра окна</font></li>
+  <li><font color="#FF3333">ES:BX содержит 
+    адрес командной строки</font></li>
+  <li><font color="#FF3333">SI содержит идентификатор 
+    ранее загруженной программы <strong>hPrevInstance</strong></font></li>
+  <li><font color="#FF3333">DI содержит идентификатор 
+    загруженной программы <strong>hInstance</strong></font></li>
+</ul>
+<p align="left"><font>После обработки входных 
+  параметров нужно инициализировать приложение, используя функцию <strong><font color="#FF3333">INITAPP</font>. 
+  </strong>Единственным параметром этой функции служит идентификатор приложения 
+  hInstance<strong>.</strong>Функция <strong><font color="#FF3333">INITAPP</font></strong> 
+  возвращает в AX=1 если приложение успешно проинициализировано. </font></p>
+<p><font>Для того, что бы посмотреть, что 
+  же эта программа умеет делать вы должны создать еще один файл <strong>.def</strong></font></p>
+<p><font>Файл <a href="hello.def.rar">hello.def</a></font></p>
+<hr>
+<p><font color="#FF3333"><strong>NAME HELLO<br>
+  EXETYPE WINDOWS<br>
+  <br>
+  CODE MOVABLE DISCARDABLE<br>
+  DATA MOVABLE MULTIPLE DISCARDABLE<br>
+  STACKSIZE 5120<br>
+  HEAPSIZE 4096<br>
+  DESCRIPTION 'Copyright(C) 1999 by BlackWolf'</strong></font></p>
+<hr>
+<p><font>Содержимое этого файла мы рассмотрим 
+  подробнее :</font></p>
+<p><font color="#FF3333"><strong>NAME HELLO</strong></font></p>
+<p><font>Имя получаемого модуля &quot;HELLO&quot;.</font></p>
+<p><font color="#FF3333"><strong>EXETYPE 
+  WINDOWS</strong></font></p>
+<p><font>Тип получаемого модуля - исполняемый 
+  файл Windows.</font></p>
+<p><font color="#FF3333"><strong>CODE MOVABLE 
+  DISCARDABLE</strong></font></p>
+<p><font>Ключевым словом CODE мы можем выставлять 
+  параметры нашего кодового сегмента. О возможных параметрах сегмента смотрите 
+  ниже.</font></p>
+<p><font color="#FF3333"><strong>DATA MOVABLE 
+  MULTIPLE DISCARDABLE</strong></font></p>
+<p><font>Тоже самое только для сегмента данных.</font></p>
+<p><font color="#FF3333"><strong>STACKSIZE 
+  5120</strong></font></p>
+<p><font>Устанавливаем размер стэка равным 
+  5120.</font></p>
+<p><font color="#FF3333"><strong>HEAPSIZE 
+  4096</strong></font></p>
+<p><font>Устанавливаем размер &quot;кучи&quot; 
+  равным 4096.</font></p>
+<p><font color="#FF3333"><strong>DESCRIPTION 
+  'Copyright(C) 1999 by BlackWolf'</strong></font></p>
+<p><font>Директива <font color="#FF3333">DESCRIPTION</font> 
+  вставляет в файл кода указанный текст и обычно применяется для примечания о 
+  авторских правах.</font></p>
+<p><font>Теперь рассмотрим параметры сегментов. 
+  Они могут быть различных типов и в принципе формат инструкций <font color="#FF3333"><strong>CODE</strong></font> 
+  и <font color="#FF3333"><strong>DATA</strong></font> выглядит таким образом:</font></p>
+<p><font color="#FF3333">CODE [FIXED|MOVABLE] 
+  [DISCARDABLE|NONDISCARDABLE] [PRELOAD|LOADONCALL]</font></p>
+<p><font>Скобки в данном случае показывают, 
+  что элемент не обязателен. Вертикальная черта означает &quot;ИЛИ&quot;. Опции 
+  директивы <font color="#FF3333"><strong>CODE</strong> </font>означают:</font></p>
+<ul>
+  <li><font color="#FF3333"><strong>FIXED</strong></font><font> 
+    - Сегмент имеет фиксированный адрес.</font></li>
+  <li><font color="#FF3333"><strong>MOVABLE</strong></font><font> 
+    - Сегмент может быть перемещен, что бы освободить пространство в памяти.</font></li>
+  <li><font color="#FF3333"><strong>DISCARDABLE</strong></font><font> 
+    - Сегмент может быть выгружен, чтобы освободить пространство.</font></li>
+  <li><font color="#FF3333"><strong>NONDISCARDABLE</strong></font><font> 
+    - Сегмент не может быть выгружен.</font></li>
+  <li><font color="#FF3333"><strong>PRELOAD</strong></font><font> 
+    - Сегмент загружается в память при запуске приложения.</font></li>
+  <li><font color="#FF3333"><strong>LOADONCALL</strong></font><font> 
+    - Сегмент загружается в память только когда происходит обращение к некоторому 
+    его элементу.</font></li>
+</ul>
+<p><font color="#FF3333">DATA [NONE|SINGLE|MULTIPLE] 
+  [READONLY|READWRITE] [PRELOAD|LOADONCALL] [SHARED|NONSHARED]</font></p>
+<p><font>Скобки в данном случае показывают, 
+  что элемент не обязателен. Вертикальная черта означает &quot;ИЛИ&quot;. Опции 
+  директивы <strong>DATA</strong> означают:</font></p>
+<ul>
+  <li><font color="#FF3333"><strong>NONE</strong></font><font> 
+    - Cегмент данных отсутствует (применяется только для DLL).</font></li>
+  <li><font color="#FF3333"><strong>SINGLE</strong></font><font> 
+    - Единственный сегмент данных, разделяемый всеми процессами (применяется по 
+    умолчанию для DLL).</font></li>
+  <li><font color="#FF3333"><strong>MULTIPLE</strong></font><font> 
+    - Несколько сегментов данных (применяется по умолчанию для исполняемых файлов).</font></li>
+  <li><font color="#FF3333"><strong>READONLY</strong></font><font> 
+    - Данные в сегменте можно только читать, но не изменять.</font></li>
+  <li><font color="#FF3333"><strong>READWRITE</strong></font><font> 
+    - Данные в сегменте можно как читать, так и изменять.</font></li>
+  <li><font color="#FF3333"><strong>PRELOAD</strong></font><font> 
+    - Сегмент заранее автоматически загружается в память.</font></li>
+  <li><font color="#FF3333"><strong>LOADONCALL</strong></font><font> 
+    - Сегмент загружается в память при обращении к нему.</font></li>
+  <li><font color="#FF3333"><strong>SHARED</strong></font><font> 
+    - Одна копия сегмента данных разделяется между всеми процессами (применяется 
+    по умолчанию для 16-битных DLL)</font></li>
+  <li><font color="#FF3333"><strong>NONSHARED</strong></font><font> 
+    - Отдельная копия сегмента данных загружается для каждого процесса (применяется 
+    по умолчанию для приложений и 32-битных DLL).</font></li>
+</ul>
+<p><font>Существует также еще одна очень 
+  интересная директива - <font color="#FF3333"><strong>STUB</strong></font>. Она 
+  вставляет в файл .EXE кода для Windows программу Dos. Эта директива никогда 
+  не применяется для библиотек. Если вы не указываете директиву <font color="#FF3333"><strong>STUB</strong></font> 
+  Turbo Assembler вставит в ваш исполняемый файл программу WINSTUB.EXE. Эта программа 
+  является заглушкой для запуска Windows приложений под Dos. При запуске вашего 
+  приложения под Dos вы получите примерно такое сообщение :</font></p>
+<p><font><strong>This program must be run 
+  under Microsoft Windows.</strong></font></p>
+<p><font>Используя данную директиву вы можете 
+  написать программу которая будет прекрасно работать как под Dos так и под Windows.</font></p>
+<p><font>После написания файлов <strong>hello.asm</strong> 
+  и <strong>hello.def</strong> вы должны скомпилировать и скомпоновать программу 
+  используя такие параметры для Turbo Assembler:</font></p>
+<p><font color="#FF3333"><strong>tasm hello.asm</strong></font></p>
+<p><font>После компиляции вы должны получить 
+  .OBJ файл.</font></p>
+<p><font color="#FF3333"><strong>tlink hello,hello,,import.lib(*),hello</strong></font></p>
+<p><font>После компоновки вы получите готовый 
+  исполняемы файл Windows. :)</font></p>
+<p><font>(*) Если вы используете импорт функций 
+  API или импорт функций из других DLL, вы обязательно должны включить в компоновку 
+  библиотеку import.lib для 16-битных приложений, или библиотеку import32.lib 
+  для 32-битных приложений.</font></p>
+<p><font>На этом я закончу первую вводную 
+  статью о программировании на ассемблере для Windows. 
+  <p><div align="center"><a href="index.htm">	<img src="../../soder.gif" width=120 height=31 border=0 alt=""></a></div></p>
+
+</body>
+</html>

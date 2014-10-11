@@ -1,0 +1,131 @@
+<html>
+<head>
+<title>Введение</title>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+</head>
+<BODY background="../../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Введение в программирование 
+    для Win32 </font></b></div></p>
+<div align="center"> 
+
+  <p align="left"><font>Программирование 
+    на ассемблере всегда отличалось от программирования на языках высокого уровня 
+    и требовало от программиста дополнительных знаний, дополнительной практики 
+    и большего проффесионализма. Поэтому прежде чем начать создавать приложения 
+    для Win32 мы должны рассмотреть некоторые особенности системы Win32, которые 
+    были введены фирмой Microsoft.</font></p>
+  <p align="left"><font>1. Передача параметрам 
+    функциям Windows API реализована по прямому алгоритму. То есть если на C Вы 
+    вызывали фнукциию так:</font></p>
+  <p align="left"><font color=green>FARPROC 
+    GetProcAddress(HMODULE hModule, LPCSTR lpProcName) </font></p>
+  <p align="left"><font>то на ассемблере 
+    вызов подобной функции будет выглядеть так :</font></p>
+  <p align="left"><font color=green>...<br>
+    mov eax,offset lpProcName<br>
+    mov ebx,hModule<br>
+    push eax<br>
+    push ebx<br>
+    call GetProcAddress<br>
+    ...</font></p>
+  <p align="left"><font>В то время как в 
+    TASM :</font></p>
+  <p align="left"><font color=green>.model 
+    FLAT,STDCALL<br>
+    ...<br>
+    call GetProcAddress, [hModule], offset lpProcName<br>
+    ...</font></p>
+  <p align="left"><font>В инструкции компилятору 
+    &quot;.model&quot; мы передали в параметре, что будем использовать модель 
+    памяти FLAT и осуществлять стандартную передачу параметров типа STDCALL.</font></p>
+  <p align="left"><font>STDCALL использует 
+    соглашения языка C для процедур с переменными аргументами и соглашения языка 
+    Pascal для процедур с постоянными аргументами. Для всех остальных идентификаторов 
+    применяются соглашения языка C. </font></p>
+  <p align="left"><font>Так например некоторые 
+    функции Windows API используют способ перевернутой передачи параметров в стек. 
+    Так называемый (метод языка С или С-метод). К таким функциям относят функции 
+    который могут получать переменное число параметров. Примером такой функции 
+    может послужить функция <font color="#FF0033">wsprintf(LPTSTR lpOut, LPCTSTR 
+    lpFmt, ... )<font color="#FFFFFF">. Для вызова таких функций нужно воспользоваться 
+    модификатором вызова, что в TASM делается так :</font></font></font></p>
+  <p align="left"><font color=green>call 
+    _wsprintfA C, offset lpOut, offset lpFmt, offset lpFirstParameter, offset 
+    lpSecondParameter</font></p>
+  <p align="left"><font>в то время как другие 
+    функции с постоянным числом параметров можно вызывать без всяких модификаторов 
+    ( если вы конечно воспользовались директивой &quot;.model FLAT, STDCALL&quot;).</font></p>
+  <p align="left"><font color=green>call 
+    GetProcAddressA, [hModule], offset lpProcName</font></p>
+  <p align="left"><font>2. Все функции API 
+    подразделены на две группы: функции которые поддерживают UNICODE, и функции 
+    которые поддерживают ANSI. Функции, поддерживающие UNICODE имеют в конце названия 
+    букву &quot;W&quot;, а функции, поддерживающие ANSI имеют в конце названия 
+    букву &quot;A&quot;. Таким образом :</font></p>
+  <p align="left"><font color="#FF0033">GetProcAddressA</font><font> 
+    - прототип функции GetProcAddress для ANSI.<br>
+    <font color="#FF0033">GetProcAddressW</font> - прототип функции GetProcAddress 
+    для UNICODE.</font></p>
+  <p align="left"><font>Различие UNICODE 
+    от ANSI заключается в том, что в ANSI для передачи одной буквы используется 
+    один байт, в зависимости от текущей кодовой страницы в различных кодировках, 
+    а в UNICODE использьзуется два байта (так называемый WIDE символ). Поэтому 
+    при использовании UNICODE все ссылки на строки включают в себя букву W. Так 
+    например :</font></p>
+  <p align="left"><font color=green>LPCTSTR 
+    (ANSI) = LPCWSTR (UNICODE)<br>
+    LPTSTR (ANSI) = LPWSTR (UNICODE)</font></p>
+  <p align="left"><font>3. Все функции Windows 
+    API теперь зависят от регистра букв. То есть если если функция API называется 
+    GetProcAddressA то и объявление то же должно быть GetProcAddressA. Например 
+    :</font></p>
+  <p align="left"><font color=green>...<br>
+    EXTRN GetProcAddressA: PROC<br>
+    ...<br>
+    call GetProcAddressA,[hModule], offset lpProcName<br>
+    ... </font></p>
+  <p align="left"><font>4. Рассмотрим теперь 
+    оссобенности компиляции и компоновки программ. Для компиляции под Win32 Вам 
+    понадобяться следующие программы:</font></p>
+  <p align="left"><font color=green>tasm32.exe 
+    - Borland Turbo Assembler<br>
+    tlink32.exe - Borland Turbo Link<br>
+    brcc32.exe - Borland Resource Compiler</font></p>
+  <p align="left"><font>Для запуска этих 
+    программ понадобяться еще несколько библиотек.</font> </p>
+  <p align="left"><font>Итак для того, что 
+    бы откомпилировать нашу программу используя TASM надо передать компилятору 
+    такие параметры:</font></p>
+  <p align="left"><font color=green>tasm32.exe 
+    /ml &lt;имя файла&gt;</font></p>
+  <p align="left"><font>Опция /ml в данном 
+    случае говорит о том, что в тексте программы во всех именах следует различать 
+    регистр букв, то есть CreateWindow будет отличаться от CREATEWINDOW.</font></p>
+  <p align="left"><font>Теперь скомпонуем 
+    нашу программу :</font></p>
+  <p align="left"><font color=green>tlink32.exe 
+    -c -aa -Tpe &lt;имя файла&gt;</font></p>
+  <p align="left"><font>Опция <font color="#FF0033">-с</font> 
+    аналогична опции /ml, она говорит компоновщику о том, что в файле должны различаться 
+    регистры букв у имен переменных и функций.</font></p>
+  <p align="left"><font> Опция <font color="#FF0033">-aa</font> 
+    указывает компилятору что нужно создать обычное приложение Windows использующее 
+    GDI. Если вы укажите опцию <font color="#FF0033">-ap</font> то компоновщик 
+    сгенерирует консольное приложение Windows (примером консольного приложения 
+    может послужить FAR). Написание консольных приложений я рассмотрю в одной 
+    из своих следующих статей.</font></p>
+  <p align="left"><font> Последней опцией 
+    <font color="#FF0033">-Tpe</font> мы сообщаем компоновщику, что нужно сгенерировать 
+    EXE файл. Если мы укажем опцию <font color="#FF0033">-Tpd</font> то на выходе 
+    компоновщика получим DLL файл.</font></p>
+  <p align="left"><font>Компиляция ресурсов 
+    в Win32 происходит по тому-же алгоритму, что и в Win16. Например для компиляции 
+    ресурсов, находящихся в файле myres.rc нужно запустить brcc32.exe с следующимим 
+    параметрами.</font></p>
+  <p align="left"><font color=green>brcc32.exe 
+    myres.rc</font></p>
+  <p align="left"><font>Ну вот и все об основных 
+    различиях программирования для Win32. 
+	  <p><div align="center"><a href="index.htm">	<img src="../../soder.gif" width=120 height=31 border=0 alt=""></a></div></p>
+</body>
+</html>

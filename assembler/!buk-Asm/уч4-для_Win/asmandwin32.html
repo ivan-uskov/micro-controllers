@@ -1,0 +1,990 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0057)http://home.od.ua/~blackw/WinAsm/NotMain/asmandwin32.html -->
+<!-- saved from url=(0051)http://developer.jeo.ru/win32/Articles/asmwin32.htm --><HTML><HEAD><TITLE>ASSEMBLER & WIN32</TITLE>
+</HEAD>
+<BODY background="../../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">ASSEMBLER &amp; WIN32 </font></b></div></p>
+
+<P><FONT face="Times New Roman" size=-1>Программирование на ассемблере под Win32 
+воспринимается весьма не однозначно. Считается, что написание приложений слишком 
+сложно для применения ассемблера. Собственно обсуждению того насколько оправдана 
+такая точка зрения и посвящена данная статья. Она не ставит своей целью обучение 
+программированию под Win32 или обучение ассемблеру, я подразумеваю, что читатели 
+имеют определённые знания в этих областях.</FONT> </P>
+<P><FONT face="Times New Roman" size=-1>В отличие от программирования под DOS, 
+где программы написанные на языках высокого уровня (ЯВУ) были мало похожи на 
+свои аналоги, написанные на ассемблере, приложения под Win32 имеют гораздо 
+больше общего. В первую очередь, это связано с тем, что обращение к сервису 
+операционной системы в Windows осуществляется посредством вызова функций, а не 
+прерываний, что было характерно для DOS. Здесь нет передачи параметров в 
+регистрах при обращении к сервисным функциям и, соответственно, нет и множества 
+результирующих значений возвращаемых в регистрах общего назначения и регистре 
+флагов. Следовательно проще запомнить и использовать протоколы вызова функций 
+системного сервиса. С другой стороны, в Win32 нельзя непосредственно работать с 
+аппаратным уровнем, чем “грешили” программы для DOS. Вообще написание программ 
+под Win32 стало значительно проще и это обусловлено следующими факторами:</FONT> 
+
+<UL>
+  <LI><FONT face="Times New Roman" size=-1>отсутствие startup кода, характерного 
+  для приложений и динамических библиотек написанных под Windows 3.x;</FONT> 
+  <LI><FONT face="Times New Roman" size=-1>гибкая система адресации к памяти: 
+  возможность обращаться к памяти через любой регистр общего назначения; 
+  “отсутствие” сегментных регистров;</FONT> 
+  <LI><FONT face="Times New Roman" size=-1>доступность больших объёмов 
+  виртуальной памяти;</FONT> 
+  <LI><FONT face="Times New Roman" size=-1>развитый сервис операционной системы, 
+  обилие функций, облегчающих разработку приложений;</FONT> 
+  <LI><FONT face="Times New Roman" size=-1>многообразие и доступность средств 
+  создания интерфейса с пользователем (диалоги, меню и т.п.).</FONT> 
+</LI></UL><FONT face="Times New Roman" size=-1>
+<P>Современный ассемблер, к которому относится и TASM 5.0 фирмы Borland 
+International Inc., в свою очередь, развивал средства, которые ранее были 
+характерны только для ЯВУ. К таким средствам можно отнести макроопределение 
+вызова процедур, возможность введения шаблонов процедур (описание прототипов) и 
+даже объектно-ориентированные расширения. Однако, ассемблер сохранил и такой 
+прекрасный инструмент, как макроопределения вводимые пользователем, полноценного 
+аналога которому нет ни в одном ЯВУ.</FONT> </P>
+<P align=center><FONT face="Times New Roman" size=-1>Все эти факторы позволяют 
+рассматривать ассемблер, как самостоятельный инструмент для написания приложений 
+под платформы Win32 (Windows NT и Windows 95). Как иллюстрацию данного 
+положения, рассмотрим простой пример приложения, работающего с диалоговым 
+окном.</FONT> <FONT face=Arial>Пример 1. Программа работы с диалогом</FONT> 
+<FONT face="Times New Roman" size=-1>Файл, содержащий текст приложения, 
+dlg.asm</FONT> &nbsp; </P>
+<DIV align=center>
+<CENTER>
+<TABLE bgColor=#ffffff border=1 width=626>
+  <TBODY>
+  <TR>
+    <TD>
+      <DIV align=center>
+      <CENTER><PRE><!-- Row 1 Column 1 --> </PRE></CENTER></DIV></TD>
+    <TD width=620><PRE><FONT face="Courier New CE">IDEAL
+P586
+RADIX&nbsp;&nbsp; 16
+MODEL&nbsp;&nbsp; FLAT</FONT></PRE><PRE><FONT face="Courier New CE">%NOINCL
+%NOLIST
+include "winconst.inc"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; API Win32 consts
+include "winptype.inc"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; API Win32 functions prototype
+include "winprocs.inc"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; API Win32 function
+include "resource.inc"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; resource consts</FONT></PRE><PRE><FONT face="Courier New CE">MAX_USER_NAME&nbsp;&nbsp; =&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 20
+DataSeg
+szAppName&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; db&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 'Demo 1', 0
+szHello&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; db&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 'Hello, '
+szUser&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; db&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MAX_USER_NAME dup (0)</FONT></PRE><PRE><FONT face="Courier New CE">CodeSeg
+Start:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; GetModuleHandleA,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; DialogBoxParamA,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; eax, IDD_DIALOG, 0, offset DlgProc, 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cmp&nbsp;&nbsp;&nbsp;&nbsp; eax,IDOK
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jne&nbsp;&nbsp;&nbsp;&nbsp; bye
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; MessageBoxA,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0, offset szHello,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; offset szAppName,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MB_OK or MB_ICONINFORMATION
+bye:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; ExitProcess,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0</FONT></PRE><PRE><FONT face="Courier New CE">public&nbsp; stdcall DlgProc
+proc&nbsp;&nbsp;&nbsp; DlgProc stdcall
+arg&nbsp;&nbsp;&nbsp;&nbsp; @@hDlg&nbsp; :dword, @@iMsg&nbsp; :dword, @@wPar&nbsp; :dword, @@lPar&nbsp; :dword
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; eax,[@@iMsg]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cmp&nbsp;&nbsp;&nbsp;&nbsp; eax,WM_INITDIALOG
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; je&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; @@init
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cmp&nbsp;&nbsp;&nbsp;&nbsp; eax,WM_COMMAND
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jne&nbsp;&nbsp;&nbsp;&nbsp; @@ret_false</FONT></PRE><PRE><FONT face="Courier New CE">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; eax,[@@wPar]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cmp&nbsp;&nbsp;&nbsp;&nbsp; eax,IDCANCEL
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; je&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; @@cancel
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cmp&nbsp;&nbsp;&nbsp;&nbsp; eax,IDOK
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jne&nbsp;&nbsp;&nbsp;&nbsp; @@ret_false</FONT></PRE><PRE><FONT face="Courier New CE">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; GetDlgItemTextA,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [@@hDlg[, IDR_NAME,&nbsp;&nbsp;&nbsp;&nbsp; \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; offset szUser, MAX_USER_NAME
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; eax,IDOK
+@@cancel:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; EndDialog,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [@@hDlg[, eax</FONT></PRE><PRE><FONT face="Courier New CE">@@ret_false:&nbsp;&nbsp;&nbsp; xor&nbsp;&nbsp;&nbsp;&nbsp; eax,eax
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ret</FONT></PRE><PRE><FONT face="Courier New CE">@@init:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; GetDlgItem,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [@@hDlg], IDR_NAME
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; SetFocus,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; eax
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jmp&nbsp;&nbsp;&nbsp;&nbsp; @@ret_false
+endp&nbsp;&nbsp;&nbsp; DlgProc
+end&nbsp;&nbsp;&nbsp;&nbsp; Start</FONT></PRE></TD></TR></TBODY></TABLE></CENTER></DIV>
+<P align=center>&nbsp; <FONT face="Times New Roman" size=-1>Файл ресурсов 
+dlg.rc</FONT> &nbsp; </P>
+<DIV align=center>
+<CENTER>
+<TABLE bgColor=#ffffff border=1 width=625>
+  <TBODY>
+  <TR>
+    <TD width=619><PRE><FONT face="Courier New">#include "resource.h"</FONT></PRE><PRE><FONT face="Courier New">IDD_DIALOG DIALOGEX 0, 0, 187, 95
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CLIENTEDGE
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+&nbsp;&nbsp;&nbsp; DEFPUSHBUTTON&nbsp;&nbsp; "OK",IDOK,134,76,50,14
+&nbsp;&nbsp;&nbsp; PUSHBUTTON&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "Cancel",IDCANCEL,73,76,50,14
+&nbsp;&nbsp;&nbsp; LTEXT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "Type your name",IDC_STATIC,4,36,52,8
+&nbsp;&nbsp;&nbsp; EDITTEXT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; IDR_NAME,72,32,112,14,ES_AUTOHSCROLL
+END</FONT></PRE></TD></TR></TBODY></TABLE></CENTER></DIV>
+<P></P>
+<P><FONT face="Times New Roman" size=-1>Остальные файлы из данного примера, 
+приведены в приложении 1.</FONT> </P>
+<P><FONT face="Times New Roman" size=-1>Сразу после метки Start, программа 
+обращается к функции API Win32 GetModuleHandle для получения handle данного 
+модуля (данный параметр чаще именуют как handle of instance). Получив handle, мы 
+вызываем диалог, созданный либо вручную, либо с помощью какой-либо программы 
+построителя ресурсов. Далее программа проверяет результат работы диалогового 
+окна. Если пользователь вышел из диалога посредством нажатия клавиши OK, то 
+приложение запускает MessageBox с текстом приветствия.</FONT> </P>
+<P><FONT face="Times New Roman" size=-1>Диалоговая процедура обрабатывает 
+следующие сообщения. При инициализации диалога (WM_INITDIALOG) она просит 
+Windows установить фокус на поле ввода имени пользователя. Сообщение WM_COMMAND 
+обрабатывается в таком порядке: делается проверка на код нажатия клавиши. Если 
+была нажата клавиша OK, то пользовательский ввод копируется в переменную 
+szValue, если же была нажата клавиша Cancel, то копирования не производится. Но 
+и в том и другом случае вызывается функция</FONT> </P>
+<P><FONT face="Times New Roman" size=-1>окончания диалога: EndDialog. Остальные 
+сообщения в группе WM_COMMAND просто игнорируются, предоставляя Windows 
+действовать по умолчанию.</FONT> </P>
+<P><FONT face="Times New Roman" size=-1>Вы можете сравнить приведённую программу 
+с аналогичной программой, написанной на ЯВУ, разница в написании будет 
+незначительна. Очевидно те, кто писал приложения на ассемблере под Windows 3.x, 
+отметят тот факт, что исчезла необходимость в сложном и громоздком startup коде. 
+Теперь приложение выглядит более просто и естественно.</FONT> </P>
+<P><FONT face=Arial size=-1>Пример 2. Динамическая библиотека</FONT> </P>
+<P><FONT face="Times New Roman" size=-1>Написание динамических библиотек под 
+Win32 также значительно упростилось, по сравнению с тем, как это делалось под 
+Windows 3.x. Исчезла необходимость вставлять startup код, а использование 
+четырёх событий инициализации/деинициализации на уровне процессов и потоков, 
+кажется логичным.</FONT> </P>
+<P align=center><FONT face="Times New Roman" size=-1>Рассмотрим простой пример 
+динамической библиотеки, в которой всего одна функция, преобразования целого 
+числа в строку в шестнадцатеричной системе счисления.</FONT> <FONT 
+face="Times New Roman" size=-1><B>Файл mylib.asm</B></FONT> &nbsp; </P>
+<DIV align=center>
+<CENTER>
+<TABLE bgColor=#ffffff border=1 width=482>
+  <TBODY>
+  <TR>
+    <TD width=476><PRE><FONT face="Courier New">Ideal
+P586
+Radix&nbsp;&nbsp; 16
+Model&nbsp;&nbsp; flat
+DLL_PROCESS_ATTACH&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 1
+
+extrn&nbsp;&nbsp; GetVersion:&nbsp;&nbsp;&nbsp;&nbsp; proc
+
+DataSeg
+hInst&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+OSVer&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dw&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+
+CodeSeg
+proc&nbsp;&nbsp;&nbsp; libEntry&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stdcall
+arg&nbsp;&nbsp;&nbsp;&nbsp; @@hInst :dword, @@rsn&nbsp;&nbsp; :dword, @@rsrv&nbsp; :dword
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cmp&nbsp;&nbsp;&nbsp;&nbsp; [@@rsn],DLL_PROCESS_ATTACH
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jne&nbsp;&nbsp;&nbsp;&nbsp; @@1
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; GetVersion
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; [OSVer],ax
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; eax,[@@hInst]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; [hInst],eax
+@@1:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; eax,1
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ret
+endP&nbsp;&nbsp;&nbsp; libEntry
+
+public&nbsp; stdcall Hex2Str
+proc&nbsp;&nbsp;&nbsp; Hex2Str stdcall
+arg&nbsp;&nbsp;&nbsp;&nbsp; @@num&nbsp;&nbsp; :dword, @@str&nbsp;&nbsp; :dword
+uses&nbsp;&nbsp;&nbsp; ebx
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; eax,[@@num]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; ebx,[@@str]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; ecx,7
+@@1:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; edx,eax
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; shr&nbsp;&nbsp;&nbsp;&nbsp; eax,4
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; and&nbsp;&nbsp;&nbsp;&nbsp; edx,0F
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cmp&nbsp;&nbsp;&nbsp;&nbsp; edx,0A
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jae&nbsp;&nbsp;&nbsp;&nbsp; @@2
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; add&nbsp;&nbsp;&nbsp;&nbsp; edx,'0'
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jmp&nbsp;&nbsp;&nbsp;&nbsp; @@3
+@@2:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; add&nbsp;&nbsp;&nbsp;&nbsp; edx,'A' - 0A
+@@3:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; [byte ebx + ecx],dl
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dec&nbsp;&nbsp;&nbsp;&nbsp; ecx
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jns&nbsp;&nbsp;&nbsp;&nbsp; @@1
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; [byte ebx + 8],0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ret
+endp&nbsp;&nbsp;&nbsp; Hex2Str
+
+end&nbsp;&nbsp;&nbsp;&nbsp; libEntry</FONT></PRE></TD></TR></TBODY></TABLE></CENTER></DIV>
+<P>&nbsp;<FONT face="Times New Roman" size=-1>Остальные файлы, которые 
+необходимы для данного примера, можно найти в приложении 2.</FONT> </P>
+<H3><FONT face="Times New Roman" size=-1>Краткие комментарии к динамической 
+библиотеке</FONT></H3><FONT face="Times New Roman" size=-1>
+<P>Процедура libEntry является точкой входа в динамическую библиотеку, её не 
+надо объявлять как экспортируемую, загрузчик сам определяет её местонахождение. 
+LibEntry может вызываться в четырёх случаях:</FONT> 
+<UL>
+  <LI><FONT face="Times New Roman" size=-1>при проецировании библиотеки в 
+  адресное пространство процесса (DLL_PROCESS_ATTACH);</FONT> 
+  <LI><FONT face="Times New Roman" size=-1>при первом вызове библиотеки из 
+  потока (DLL_THREAD_ATTACH), например, с помощью функции LoadLibrary;</FONT> 
+  <LI><FONT face="Times New Roman" size=-1>при выгрузке библиотеки потоком 
+  (DLL_THREAD_DETACH);</FONT> 
+  <LI><FONT face="Times New Roman" size=-1>при выгрузке библиотеки из адресного 
+  пространства процесса (DLL_PROCESS_DETACH).</FONT> </LI></UL><FONT 
+face="Times New Roman" size=-1>
+<P>В нашем примере обрабатывается только первое из событий DLL_PROCESS_ATTACH. 
+При обработке данного события библиотека запрашивает версию OS сохраняет её, а 
+также свой handle of instance.</FONT> </P>
+<P align=center><FONT face="Times New Roman" size=-1>Библиотека содержит только 
+одну экспортируемую функцию, которая собственно не требует пояснений. Вы, 
+пожалуй, можете обратить внимание на то, как производится запись преобразованных 
+значений. Интересна система адресации посредством двух регистров общего 
+назначения: ebx + ecx, она позволяет нам использовать регистр ecx одновременно и 
+как счётчик и как составную часть адреса.</FONT> </P>
+<H3 align=center><FONT face="Times New Roman" size=-1>Пример 3. Оконное 
+приложение</FONT></H3><FONT face="Times New Roman" size=-1><B>
+<P align=center>Файл dmenu.asm</B></FONT> &nbsp; </P>
+<DIV align=center>
+<CENTER>
+<TABLE bgColor=#ffffff border=1 width=823>
+  <TBODY>
+  <TR>
+    <TD width=817><PRE><FONT face="Courier New">Ideal
+P586
+Radix&nbsp;&nbsp; 16
+Model&nbsp;&nbsp; flat
+
+struc&nbsp;&nbsp; WndClassEx
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cbSize&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; style&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lpfnWndProc&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cbClsExtra&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cbWndExtra&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hInstance&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hIcon&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hCursor&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hbrBackground&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lpszMenuName&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lpszClassName&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hIconSm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+ends&nbsp;&nbsp;&nbsp; WndClassEx
+
+struc&nbsp;&nbsp; Point
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; y&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+ends&nbsp;&nbsp;&nbsp; Point
+
+struc&nbsp;&nbsp; msgStruc
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hwnd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; message&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; wParam&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lParam&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pnt&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Point&nbsp;&nbsp; &lt;&gt;
+ends&nbsp;&nbsp;&nbsp; msgStruc
+
+MyMenu&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 0065
+ID_OPEN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 9C41
+ID_SAVE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 9C42
+ID_EXIT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 9C43
+
+CS_HREDRAW&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 0001
+CS_VREDRAW&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 0002
+IDI_APPLICATION&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 7F00
+IDC_ARROW&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 00007F00
+COLOR_WINDOW&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 5
+WS_EX_WINDOWEDGE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 00000100
+WS_EX_CLIENTEDGE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 00000200
+WS_EX_OVERLAPPEDWINDOW&nbsp; = WS_EX_WINDOWEDGE OR WS_EX_CLIENTEDGE
+WS_OVERLAPPED&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 00000000
+WS_CAPTION&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 00C00000
+WS_SYSMENU&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 00080000
+WS_THICKFRAME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 00040000
+WS_MINIMIZEBOX&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 00020000
+WS_MAXIMIZEBOX&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 00010000
+WS_OVERLAPPEDWINDOW&nbsp;&nbsp;&nbsp;&nbsp; = WS_OVERLAPPED&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; OR&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WS_CAPTION&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; OR \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WS_SYSMENU&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; OR&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WS_THICKFRAME&nbsp;&nbsp;&nbsp;&nbsp; OR \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WS_MINIMIZEBOX&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; OR&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WS_MAXIMIZEBOX&nbsp;
+CW_USEDEFAULT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 80000000
+SW_SHOW&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 5
+WM_COMMAND&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 0111
+WM_DESTROY&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 0002
+WM_CLOSE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 0010
+MB_OK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 0
+
+PROCTYPE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ptGetModuleHandle&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stdcall \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lpModuleName&nbsp;&nbsp;&nbsp; :dword
+
+PROCTYPE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ptLoadIcon&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stdcall \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hInstance&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lpIconName&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword
+
+PROCTYPE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ptLoadCursor&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stdcall \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hInstance&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lpCursorName&nbsp;&nbsp;&nbsp; :dword
+
+PROCTYPE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ptLoadMenu&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stdcall \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hInstance&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lpMenuName&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword
+
+PROCTYPE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ptRegisterClassEx&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stdcall \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lpwcx&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword
+
+PROCTYPE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ptCreateWindowEx&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stdcall \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dwExStyle&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lpClassName&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lpWindowName&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dwStyle&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; y&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nWidth&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nHeight&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hWndParent&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hMenu&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hInstance&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lpParam&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword
+
+PROCTYPE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ptShowWindow&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stdcall \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hWnd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nCmdShow&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword
+
+PROCTYPE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ptUpdateWindow&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stdcall \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hWnd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword
+
+PROCTYPE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ptGetMessage&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stdcall \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pMsg&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hWnd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; wMsgFilterMin&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; wMsgFilterMax&nbsp;&nbsp; :dword
+
+PROCTYPE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ptTranslateMessage&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stdcall \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lpMsg&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword
+
+PROCTYPE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ptDispatchMessage&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stdcall \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pmsg&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword
+
+PROCTYPE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ptSetMenu&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stdcall \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hWnd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hMenu&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword
+
+PROCTYPE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ptPostQuitMessage&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stdcall \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nExitCode&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword
+
+PROCTYPE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ptDefWindowProc&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stdcall \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hWnd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Msg&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; wParam&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lParam&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword
+
+PROCTYPE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ptSendMessage&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stdcall \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hWnd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Msg&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; wParam&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lParam&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword
+
+PROCTYPE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ptMessageBox&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stdcall \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hWnd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lpText&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lpCaption&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword, \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; uType&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword
+
+PROCTYPE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ptExitProcess&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stdcall \
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; exitCode&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :dword
+
+extrn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GetModuleHandleA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :ptGetModuleHandle
+extrn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LoadIconA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :ptLoadIcon
+extrn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LoadCursorA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :ptLoadCursor
+extrn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; RegisterClassExA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :ptRegisterClassEx
+extrn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; LoadMenuA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :ptLoadMenu
+extrn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CreateWindowExA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :ptCreateWindowEx
+extrn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ShowWindow&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :ptShowWindow
+extrn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; UpdateWindow&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :ptUpdateWindow
+extrn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GetMessageA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :ptGetMessage
+extrn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TranslateMessage&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :ptTranslateMessage
+extrn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DispatchMessageA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :ptDispatchMessage
+extrn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SetMenu&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :ptSetMenu
+extrn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; PostQuitMessage&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :ptPostQuitMessage
+extrn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DefWindowProcA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :ptDefWindowProc
+extrn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SendMessageA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :ptSendMessage
+extrn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MessageBoxA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :ptMessageBox
+extrn&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ExitProcess&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :ptExitProcess
+
+UDataSeg
+hInst&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ?
+hWnd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ?
+
+IFNDEF&nbsp; VER1
+hMenu&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ?
+ENDIF
+
+
+DataSeg
+msg&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; msgStruc&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;&gt;
+classTitle&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; db&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 'Menu demo', 0
+wndTitle&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; db&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 'Demo program', 0
+msg_open_txt&nbsp;&nbsp;&nbsp; db&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 'You selected open', 0
+msg_open_tlt&nbsp;&nbsp;&nbsp; db&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 'Open box', 0
+msg_save_txt&nbsp;&nbsp;&nbsp; db&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 'You selected save', 0
+msg_save_tlt&nbsp;&nbsp;&nbsp; db&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 'Save box', 0
+
+CodeSeg
+Start:&nbsp; call&nbsp;&nbsp;&nbsp; GetModuleHandleA,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; получаем hInstance
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; [hInst],eax
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; sub&nbsp;&nbsp;&nbsp;&nbsp; esp,SIZE WndClassEx&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; выделяем место в стеке
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; заполняем структуру WndClassEx
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; [(WndClassEx esp).cbSize],SIZE WndClassEx
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; [(WndClassEx esp).style],CS_HREDRAW or CS_VREDRAW
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; [(WndClassEx esp).lpfnWndProc],offset WndProc
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; [(WndClassEx esp).cbWndExtra],0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; [(WndClassEx esp).cbClsExtra],0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; [(WndClassEx esp).hInstance],eax
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; LoadIconA,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0, IDI_APPLICATION
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; [(WndClassEx esp).hIcon],eax
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; LoadCursorA,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0, IDC_ARROW
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; [(WndClassEx esp).hCursor],eax
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; [(WndClassEx esp).hbrBackground],COLOR_WINDOW
+IFDEF&nbsp;&nbsp; VER1
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; [(WndClassEx esp).lpszMenuName],MyMenu
+ELSE
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; [(WndClassEx esp).lpszMenuName],0
+ENDIF
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; [(WndClassEx esp).lpszClassName],offset classTitle
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; [(WndClassEx esp).hIconSm],0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; RegisterClassExA,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; esp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; регистрируем окно
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; add&nbsp;&nbsp;&nbsp;&nbsp; esp,SIZE WndClassEx&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; восстановим стек
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; создадим окно
+
+IFNDEF&nbsp; VER2
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; CreateWindowExA,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WS_EX_OVERLAPPEDWINDOW, \ extended window style
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; offset classTitle,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \ pointer to registered class name&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; offset wndTitle,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \ pointer to window name
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WS_OVERLAPPEDWINDOW,&nbsp;&nbsp;&nbsp; \ window style
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CW_USEDEFAULT,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \ horizontal position of window
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CW_USEDEFAULT,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \ vertical position of window
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CW_USEDEFAULT,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \ window width
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CW_USEDEFAULT,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \ window height
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \ handle to parent or owner window
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \ handle to menu, or child-window identifier
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [hInst],&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \ handle to application instance
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; pointer to window-creation data
+ELSE
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; LoadMenu,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; hInst, MyMenu
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; [hMenu],eax
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; CreateWindowExA,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WS_EX_OVERLAPPEDWINDOW, \ extended window style
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; offset classTitle,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \ pointer to registered class name&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; offset wndTitle,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \ pointer to window name
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WS_OVERLAPPEDWINDOW,&nbsp;&nbsp;&nbsp; \ window style
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CW_USEDEFAULT,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \ horizontal position of window
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CW_USEDEFAULT,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \ vertical position of window
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CW_USEDEFAULT,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \ window width
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CW_USEDEFAULT,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \ window height
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \ handle to parent or owner window
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; eax,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \ handle to menu, or child-window identifier
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [hInst],&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \ handle to application instance
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; pointer to window-creation data
+ENDIF
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; [hWnd],eax
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; ShowWindow,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; eax, SW_SHOW&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; show window
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; UpdateWindow,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [hWnd]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; redraw window
+
+IFDEF&nbsp;&nbsp; VER3
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; LoadMenuA,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [hInst], MyMenu
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; [hMenu],eax
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; SetMenu,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [hWnd], eax
+ENDIF
+
+msg_loop:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; GetMessageA,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; offset msg, 0, 0, 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; or&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ax,ax
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jz&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; exit
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; TranslateMessage,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; offset msg
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; DispatchMessageA,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; offset msg
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jmp&nbsp;&nbsp;&nbsp;&nbsp; msg_loop
+exit:&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; ExitProcess,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+
+public&nbsp; stdcall WndProc
+proc&nbsp;&nbsp;&nbsp; WndProc stdcall
+arg&nbsp;&nbsp;&nbsp;&nbsp; @@hwnd: dword,&nbsp; @@msg:&nbsp; dword,&nbsp; @@wPar: dword,&nbsp; @@lPar: dword
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; eax,[@@msg]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cmp&nbsp;&nbsp;&nbsp;&nbsp; eax,WM_COMMAND
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; je&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; @@command
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cmp&nbsp;&nbsp;&nbsp;&nbsp; eax,WM_DESTROY
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jne&nbsp;&nbsp;&nbsp;&nbsp; @@default
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; PostQuitMessage,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xor&nbsp;&nbsp;&nbsp;&nbsp; eax,eax
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jmp&nbsp;&nbsp;&nbsp;&nbsp; @@ret
+@@default:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; DefWindowProcA,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [@@hwnd], [@@msg], [@@wPar], [@@lPar]
+@@ret:&nbsp; ret
+@@command:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; eax,[@@wPar]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cmp&nbsp;&nbsp;&nbsp;&nbsp; eax,ID_OPEN
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; je&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; @@open
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cmp&nbsp;&nbsp;&nbsp;&nbsp; eax,ID_SAVE
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; je&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; @@save
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; SendMessageA,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [@@hwnd], WM_CLOSE, 0, 0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xor&nbsp;&nbsp;&nbsp;&nbsp; eax,eax
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jmp&nbsp;&nbsp;&nbsp;&nbsp; @@ret
+@@open: mov&nbsp;&nbsp;&nbsp;&nbsp; eax, offset msg_open_txt
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; edx, offset msg_open_tlt
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jmp&nbsp;&nbsp;&nbsp;&nbsp; @@mess
+@@save: mov&nbsp;&nbsp;&nbsp;&nbsp; eax, offset msg_save_txt
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; edx, offset msg_save_tlt
+@@mess: call&nbsp;&nbsp;&nbsp; MessageBoxA,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0, eax, edx, MB_OK
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xor&nbsp;&nbsp;&nbsp;&nbsp; eax,eax
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jmp&nbsp;&nbsp;&nbsp;&nbsp; @@ret
+endp&nbsp;&nbsp;&nbsp; WndProc
+end&nbsp;&nbsp;&nbsp;&nbsp; Start</FONT></PRE></TD></TR></TBODY></TABLE></CENTER></DIV>
+<P></P>
+<H3><FONT face="Times New Roman" size=-1><U>Комментарии к 
+программе</U></FONT></H3><FONT face="Times New Roman" size=-1>
+<P>Здесь мне хотелось в первую очередь продемонстрировать использование 
+прототипов функций API Win32. Конечно их (а также описание констант и структур 
+из API Win32) следует вынести в отдельные подключаемые файлы, поскольку, скорее 
+всего Вы будете использовать их и в других программах. Описание прототипов 
+функций обеспечивает строгий контроль со стороны компилятора за количеством и 
+типом параметров, передаваемых в функции. Это существенно облегчает жизнь 
+программисту, позволяя избежать ошибок времени исполнения, тем более, что число 
+параметров в некоторых функциях API Win32 весьма значительно.</FONT> </P>
+<P><FONT face="Times New Roman" size=-1>Существо данной программы заключается в 
+демонстрации вариантов работы с оконным меню. Программу можно откомпилировать в 
+трёх вариантах (версиях), указывая компилятору ключи VER2 или VER3 (по умолчанию 
+используется ключ VER1). В первом варианте программы меню определяется на уровне 
+класса окна и все окна данного класса будут иметь аналогичное меню. Во втором 
+варианте, меню определяется при создании окна, как параметр функции 
+CreateWindowEx. Класс окна не имеет меню и в данном случае, каждое окно этого 
+класса может иметь своё собственное меню. Наконец, в третьем варианте, меню 
+загружается после создания окна. Данный вариант показывает, как можно связать 
+меню с уже созданным окном.</FONT> </P>
+<P><FONT face="Times New Roman" size=-1>Директивы условной компиляции позволяют 
+включить все варианты в текст одной и той же программы. Подобная техника удобна 
+не только для демонстрации, но и для отладки. Например, когда Вам требуется 
+включить в программу новый фрагмент кода, то Вы можете применить данную технику, 
+дабы не потерять функционирующий модуль. Ну, и конечно, применение директив 
+условной компиляции – наиболее удобное средство тестирования различных решений 
+(алгоритмов) на одном модуле.</FONT> </P>
+<P><FONT face="Times New Roman" size=-1>Представляет определённый интерес 
+использование стековых фреймов и заполнение структур в стеке посредством 
+регистра указателя стека (esp). Именно это продемонстрировано при заполнении 
+структуры WndClassEx. Выделение места в стеке (фрейма) делается простым 
+перемещением esp:</FONT> </P>
+<P><FONT face="Courier New" size=-2>sub esp,SIZE WndClassEx</FONT> </P>
+<P><FONT face="Times New Roman" size=-1>Теперь мы можем обращаться к выделенной 
+памяти используя всё тот же регистр указатель стека. При создании 16-битных 
+приложений такой возможностью мы не обладали. Данный приём можно использовать 
+внутри любой процедуры или даже произвольном месте программы. Накладные расходы 
+на подобное выделение памяти минимальны, однако, следует учитывать, что размер 
+стека ограничен и размещать большие объёмы данных в стеке вряд ли целесообразно. 
+Для этих целей лучше использовать “кучи” (heap) или виртуальную память (virtual 
+memory).</FONT> </P>
+<P><FONT face="Times New Roman" size=-1>Остальная часть программы достаточно 
+тривиальна и не требует каких-либо пояснений. Возможно более интересным 
+покажется тема использования макроопределений.</FONT> </P>
+<H3><FONT face="Times New Roman" 
+size=-1><U>Макроопределения</U></FONT></H3><FONT face="Times New Roman" size=-1>
+<P>Мне достаточно редко приходилось серьёзно заниматься разработкой 
+макроопределений при программировании под DOS. В Win32 ситуация принципиально 
+иная. Здесь грамотно написанные макроопределения способны не только облегчить 
+чтение и восприятие программ, но и реально облегчить жизнь программистов. Дело в 
+том, что в Win32 фрагменты кода часто повторяются, имея при этом не 
+принципиальные отличия. Наиболее показательна, в этом смысле, оконная и/или 
+диалоговая процедура. И в том и другом случае мы определяем вид сообщения и 
+передаём управление тому участку кода, который отвечает за обработку полученного 
+сообщения. Если в программе активно используются диалоговые окна, то аналогичные 
+фрагменты кода сильно перегрузят программу, сделав её малопригодной для 
+восприятия. Применение макроопределений в таких ситуациях более чем оправдано. В 
+качестве основы для макроопределения, занимающегося диспетчеризацией поступаю 
+щих сообщений на обработчиков, может послужить следующее описание.</FONT> </P>
+<P align=center><FONT face="Times New Roman" size=-1>Пример 
+макроопределений</FONT>&nbsp; </P>
+<DIV align=center>
+<CENTER>
+<TABLE bgColor=#ffffff border=1>
+  <TBODY>
+  <TR>
+    <TD><PRE><TT><FONT face="Courier New">macro&nbsp;&nbsp; MessageVector&nbsp;&nbsp; message1, message2:REST
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; IFNB&nbsp;&nbsp;&nbsp;&nbsp;<MESSAGE1>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; message1
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; offset @@&amp;message1
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; @@VecCount = @@VecCount + 1
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MessageVector&nbsp;&nbsp; message2
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ENDIF
+endm&nbsp;&nbsp;&nbsp; MessageVector
+
+macro&nbsp;&nbsp; WndMessages&nbsp;&nbsp;&nbsp;&nbsp; VecName, message1, message2:REST
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; @@VecCount&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = 0
+DataSeg
+label&nbsp;&nbsp; @@&amp;VecName&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dword
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MessageVector&nbsp;&nbsp; message1, message2
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; @@&amp;VecName&amp;Cnt&nbsp; = @@VecCount
+CodeSeg
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; ecx,@@&amp;VecName&amp;Cnt
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; eax,[@@msg]
+@@&amp;VecName&amp;_1:&nbsp; dec&nbsp;&nbsp;&nbsp;&nbsp; ecx
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; js&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; @@default
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cmp&nbsp;&nbsp;&nbsp;&nbsp; eax,[dword ecx * 8 + offset @@&amp;VecName]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jne&nbsp;&nbsp;&nbsp;&nbsp; @@&amp;VecName&amp;_1
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jmp&nbsp;&nbsp;&nbsp;&nbsp; [dword ecx + offset @@&amp;VecName + 4]
+
+@@default:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; call&nbsp;&nbsp;&nbsp; DefWindowProcA, [@@hWnd], [@@msg], [@@wPar], [@@lPar]
+@@ret:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ret
+@@ret_false:&nbsp;&nbsp;&nbsp; xor&nbsp;&nbsp;&nbsp;&nbsp; eax,eax
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jmp&nbsp;&nbsp;&nbsp;&nbsp; @@ret
+@@ret_true:&nbsp;&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp;&nbsp; eax,-1
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dec&nbsp;&nbsp;&nbsp;&nbsp; eax
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; jmp&nbsp;&nbsp;&nbsp;&nbsp; @@ret
+endm&nbsp;&nbsp;&nbsp; WndMessage</FONT></TT></PRE></TD></TR></TBODY></TABLE></CENTER></DIV>
+<P></P>
+<H4><FONT face="Times New Roman" size=-1><U>Комментарии к 
+макроопределениям</U></FONT></H4><FONT face="Times New Roman" size=-1>
+<P align=center>При написании процедуры окна Вы можете использовать 
+макроопределение WndMessages, указав в списке параметров те сообщения, обработку 
+которых намерены осуществить. Тогда процедура окна примет вид:</FONT>&nbsp; </P>
+<DIV align=center>
+<CENTER>
+<TABLE bgColor=#ffffff border=1 width=670>
+  <TBODY>
+  <TR>
+    <TD width=664><PRE><FONT face="Courier New" size=+0>proc&nbsp;&nbsp;&nbsp; WndProc stdcall
+arg&nbsp;&nbsp;&nbsp;&nbsp; @@hWnd: dword,&nbsp; @@msg:&nbsp; dword,&nbsp; @@wPar: dword,&nbsp; @@lPar: dword
+WndMessages&nbsp;&nbsp;&nbsp;&nbsp; WndVector,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WM_CREATE, WM_SIZE, WM_PAINT, WM_CLOSE, WM_DESTROY
+
+@@WM_CREATE:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; здесь обрабатываем сообщение WM_CREATE
+@@WM_SIZE:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; здесь обрабатываем сообщение WM_SIZE
+@@WM_PAINT:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; здесь обрабатываем сообщение WM_PAINT
+@@WM_CLOSE:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; здесь обрабатываем сообщение WM_CLOSE
+@@WM_DESTROY:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; здесь обрабатываем сообщение WM_DESTROY
+...</FONT></PRE><PRE><FONT face="Courier New" size=+0>endp&nbsp;&nbsp;&nbsp; WndProc</FONT></PRE></TD></TR></TBODY></TABLE></CENTER></DIV>
+<P>&nbsp;<FONT face="Times New Roman" size=-1>Обработку каждого сообщения можно 
+завершить тремя способами:</FONT> 
+<UL>
+  <LI><FONT face="Times New Roman" size=-1>вернуть значение TRUE, для этого 
+  необходимо использовать переход на метку @@ret_true;</FONT> 
+  <LI><FONT face="Times New Roman" size=-1>вернуть значение FALSE, для этого 
+  необходимо использовать переход на метку @@ret_false;</FONT> 
+  <LI><FONT face="Times New Roman" size=-1>перейти на обработку по умолчанию, 
+  для этого необходимо сделать переход на метку @@default.</FONT> </LI></UL><FONT 
+face="Times New Roman" size=-1>
+<P>Отметьте, что все перечисленные метки определены в макро WndMessages и Вам не 
+следует определять их заново в теле процедуры.</FONT> </P>
+<P><FONT face="Times New Roman" size=-1>Теперь давайте разберёмся, что 
+происходит при вызове макроопределения WndMessages. Вначале производится 
+обнуление счётчика параметров самого макроопределения (число этих параметров 
+может быть произвольным). Теперь в сегменте данных создадим метку с тем именем, 
+которое передано в макроопределение в качестве первого параметра. Имя метки 
+формируется путём конкатенации символов @@ и названия вектора. Достигается это 
+за счёт использования оператора &amp;. Например, если передать имя TestLabel, то 
+название метки примет вид: @@TestLabel. Сразу за объявлением метки вызывается 
+другое макроопределение MessageVector, в которое передаются все остальные 
+параметры, которые должны быть ничем иным, как списком сообщений, подлежащих 
+обработке в процедуре окна. Структура макроопределения MessageVector проста и 
+бесхитростна. Она извлекает первый параметр и в ячейку памяти формата dword 
+заносит код сообщения. В следующую ячейку памяти формата dword записывается а 
+дрес метки обработчика, имя которой формируется по описанному выше правилу. 
+Счётчик сообщений увеличивается на единицу. Далее следует рекурсивный вызов с 
+передачей ещё не зарегистрированных сообщений, и так продолжается до тех пор, 
+пока список сообщений не будет исчерпан.</FONT> </P>
+<P><FONT face="Times New Roman" size=-1>Сейчас в макроопределении WndMessage 
+можно начинать обработку. Теперь существо обработки скорее всего будет понятно 
+без дополнительных пояснений.</FONT> </P>
+<P><FONT face="Times New Roman" size=-1>Обработка сообщений в Windows не 
+является линейной, а, как правило, представляет собой иерархию. Например, 
+сообщение WM_COMMAND может заключать в себе множество сообщений поступающих от 
+меню и/или других управляющих элементов. Следовательно, данную методику можно с 
+успехом применить и для других уровней каскада и даже несколько упростить её. 
+Действительно, не в наших силах исправить код сообщений, поступающих в процедуру 
+окна или диалога, но выбор последовательности констант, назначаемых пунктам меню 
+или управляющим элементам (controls) остаётся за нами. В этом случае нет нужды в 
+дополнительном поле, которое сохраняет код сообщения. Тогда каждый элемент 
+вектора будет содержать только адрес обработчика, а найти нужный элемент весьма 
+просто. Из полученной константы, пришедшей в сообщении, вычитается идентификатор 
+первого пункта меню или первого управляющего элемента, это и будет номер нужного 
+элемента вектора. Остаётся только сделать переход на обработчик.</FONT> </P>
+<P><FONT face="Times New Roman" size=-1>Вообще тема макроопределений весьма 
+поучительна и обширна. Мне редко доводится видеть грамотное использование 
+макросов и это досадно, поскольку с их помощью можно сделать работу в ассемблере 
+значительно проще и приятнее.</FONT> </P>
+<H3><FONT face="Times New Roman" size=-1><U>Резюме</U></FONT></H3><FONT 
+face="Times New Roman" size=-1>
+<P>Для того, чтобы писать полноценные приложения под Win32 требуется не так 
+много:</FONT> 
+<UL>
+  <LI><FONT size=-1><FONT face="Times New Roman">собственно компилятор и 
+  компоновщик (я использую связку TASM32 и TLINK32 из пакета TASM 5.0). Перед 
+  использованием рекомендую “наложить” patch, на данный пакет. Patch можно взять 
+  на site&nbsp;<FONTSIZE=2><A 
+  href="http://www.borland.com/">http://www.borland.com/</A></FONT> <FONT 
+  face="Times New Roman">или на нашем ftp сервере ftp.uralmet.ru.</FONT></FONT> 
+  <LI><FONT face="Times New Roman" size=-1>редактор и компилятор ресурсов (я 
+  использую Developer Studio и brcc32.exe);</FONT> 
+  <LI><FONT face="Times New Roman" size=-1>выполнить перетрансляцию header 
+  файлов с описаниями процедур, структур и констант API Win32 из нотации 
+  принятой в языке Си, в нотацию выбранного режима ассемблера: Ideal или 
+  MASM.</FONT> </LI></UL><FONT face="Times New Roman" size=-1>
+<P>В результате у Вас появится возможность писать лёгкие и изящные приложения 
+под Win32, с помощью которых Вы сможете создавать и визуальные формы, и работать 
+с базами данных, и обслуживать коммуникации, и работать multimedia 
+инструментами. Как и при написании программ под DOS, у Вас сохраняется 
+возможность наиболее полного использования ресурсов процессора, но при этом 
+сложность написания приложений значительно снижается за счёт более мощного 
+сервиса операционной системы, использования более удобной системы адресации и 
+весьма простого оформления программ.</FONT> </P>
+<H3 align=right><FONT face="Times New Roman" size=-1>Приложение 1. Файлы, 
+необходимые для первого примера</FONT></H3><FONTSIZE=2>
+<H4><FONT face="Times New Roman" size=-1><B>Файл констант ресурсов 
+resource.inc</B></FONT></H4>
+<P align=center></P>
+<DIV align=center>
+<CENTER>
+<TABLE bgColor=#ffffff border=1>
+  <TBODY>
+  <TR>
+    <TD width=315><PRE><FONT face="Courier New">IDD_DIALOG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 65&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ; 101
+IDR_NAME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3E8&nbsp;&nbsp;&nbsp;&nbsp; ; 1000
+IDC_STATIC&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -1</FONT></PRE></TD></TR></TBODY></TABLE></CENTER></DIV>
+<P></P>
+<H4><FONT face="Times New Roman" size=-1><B>Файл определений 
+dlg.def</B></FONT></H4>
+<P align=center></P>
+<DIV align=center>
+<CENTER>
+<TABLE bgColor=#ffffff border=1>
+  <TBODY>
+  <TR>
+    <TD width=613><PRE><FONT face="Courier New" size=+0>NAME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TEST
+DESCRIPTION&nbsp;&nbsp;&nbsp;&nbsp; 'Demo dialog'
+EXETYPE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WINDOWS
+EXPORTS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DlgProc&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; @1</FONT></PRE></TD></TR></TBODY></TABLE></CENTER></DIV>
+<P></P>
+<H4><FONT face="Times New Roman" size=-1><B>Файл компиляции 
+makefile</B></FONT></H4>
+<P align=center></P>
+<DIV align=center>
+<CENTER>
+<TABLE bgColor=#ffffff border=1>
+  <TBODY>
+  <TR>
+    <TD width=607><PRE><FONT face="Courier New">#&nbsp;&nbsp; Make file for Demo dialog
+#&nbsp;&nbsp; make –B
+#&nbsp;&nbsp; make –B –DDEBUG for debug information
+
+NAME&nbsp;&nbsp;&nbsp; = dlg
+OBJS&nbsp;&nbsp;&nbsp; = $(NAME).obj
+DEF&nbsp;&nbsp;&nbsp;&nbsp; = $(NAME).def
+RES&nbsp;&nbsp;&nbsp;&nbsp; = $(NAME).res
+
+TASMOPT=/m3 /mx /z /q /DWINVER=0400 /D_WIN32_WINNT=0400
+
+!if $d(DEBUG)
+TASMDEBUG=/zi
+LINKDEBUG=/v
+!else
+TASMDEBUG=/l
+LINKDEBUG=
+!endif
+
+!if $d(MAKEDIR)
+IMPORT=$(MAKEDIR)\..\lib\import32
+!else
+IMPORT=import32
+!endif
+
+$(NAME).EXE: $(OBJS) $(DEF) $(RES)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tlink32 /Tpe /aa /c $(LINKDEBUG) $(OBJS),$(NAME),, $(IMPORT), $(DEF), $(RES)
+
+.asm.obj:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tasm32 $(TASMDEBUG) $(TASMOPT) $&amp;.asm
+
+$(RES): $(NAME).RC
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; BRCC32 -32 $(NAME).RC</FONT></PRE></TD></TR></TBODY></TABLE></CENTER></DIV>
+<P></P>
+<H4><FONT face="Times New Roman" size=-1><B>Файл заголовков 
+resource.h</B></FONT></H4>
+<P align=center></P>
+<DIV align=center>
+<CENTER>
+<TABLE bgColor=#ffffff border=1>
+  <TBODY>
+  <TR>
+    <TD width=606><PRE><FONT face="Courier New">//{{NO_DEPENDENCIES}}
+// Microsoft Developer Studio generated include file.
+// Used by dlg.rc
+//
+#define IDD_DIALOG&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 101
+#define IDR_NAME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1000
+#define IDC_STATIC&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -1
+
+// Next default values for new objects
+//&nbsp;
+#ifdef APSTUDIO_INVOKED
+#ifndef APSTUDIO_READONLY_SYMBOLS
+#define _APS_NEXT_RESOURCE_VALUE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 102
+#define _APS_NEXT_COMMAND_VALUE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 40001
+#define _APS_NEXT_CONTROL_VALUE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1001
+#define _APS_NEXT_SYMED_VALUE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 101
+#endif
+#endif&nbsp;&nbsp;</FONT></PRE></TD></TR></TBODY></TABLE></CENTER></DIV>
+<P></P>
+<H4 align=right><FONT face="Times New Roman" size=-1>Приложение 2. Файлы, 
+необходимые для второго примера</FONT></H4>
+<H4><FONT face="Times New Roman" size=-1><B>Файл описания 
+mylib.def</B></FONT></H4>
+<P align=center></P>
+<DIV align=center>
+<CENTER>
+<TABLE bgColor=#ffffff border=1>
+  <TBODY>
+  <TR>
+    <TD width=599><PRE>LIBRARY&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MYLIB
+DESCRIPTION&nbsp;&nbsp;&nbsp;&nbsp; 'DLL EXAMPLE, 1997'
+EXPORTS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Hex2Str&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; @1</PRE></TD></TR></TBODY></TABLE></CENTER></DIV>
+<P></P>
+<H4><FONT face="Times New Roman" size=-1><B>Файл компиляции 
+makefile</B></FONT></H4>
+<P align=center></P>
+<DIV align=center>
+<CENTER>
+<TABLE bgColor=#ffffff border=1>
+  <TBODY>
+  <TR>
+    <TD width=536><PRE><FONT face="Courier New">#&nbsp;&nbsp; Make file for Demo DLL
+#&nbsp;&nbsp; make –B
+#&nbsp;&nbsp; make –B –DDEBUG for debug information
+
+NAME&nbsp;&nbsp;&nbsp; = mylib
+OBJS&nbsp;&nbsp;&nbsp; = $(NAME).obj
+DEF&nbsp;&nbsp;&nbsp;&nbsp; = $(NAME).def
+RES&nbsp;&nbsp;&nbsp;&nbsp; = $(NAME).res
+
+TASMOPT=/m3 /mx /z /q /DWINVER=0400 /D_WIN32_WINNT=0400
+
+!if $d(DEBUG)
+TASMDEBUG=/zi
+LINKDEBUG=/v
+!else
+TASMDEBUG=/l
+LINKDEBUG=
+!endif
+
+!if $d(MAKEDIR)
+IMPORT=$(MAKEDIR)\..\lib\import32
+!else
+IMPORT=import32
+!endif
+
+$(NAME).EXE: $(OBJS) $(DEF)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tlink32 /Tpd /aa /c $(LINKDEBUG) $(OBJS),$(NAME),, $(IMPORT), $(DEF)
+
+.asm.obj:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tasm32 $(TASMDEBUG) $(TASMOPT) $&amp;.asm
+
+$(RES): $(NAME).RC
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; BRCC32 -32 $(NAME).RC</FONT></PRE></TD></TR></TBODY></TABLE></CENTER></DIV>
+<P></P>
+<H4 align=right><FONT face="Times New Roman" size=-1>Приложение 3. Файлы, 
+необходимые для третьего примера</FONT></H4>
+<H4><FONT face="Times New Roman" size=-1><B>Файл описания 
+dmenu.def</B></FONT></H4>
+<P align=center></P>
+<DIV align=center>
+<CENTER>
+<TABLE bgColor=#ffffff border=1>
+  <TBODY>
+  <TR>
+    <TD><PRE><FONT face="Courier New" size=+0>NAME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TEST
+DESCRIPTION&nbsp;&nbsp;&nbsp;&nbsp; 'Demo menu'
+EXETYPE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WINDOWS
+EXPORTS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; WndProc&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; @1</FONT></PRE></TD></TR></TBODY></TABLE></CENTER></DIV>
+<P></P>
+<H4><FONT face="Times New Roman" size=-1><B>Файл ресурсов 
+dmenu.rc</B></FONT></H4>
+<P align=center></P>
+<DIV align=center>
+<CENTER>
+<TABLE bgColor=#ffffff border=1>
+  <TBODY>
+  <TR>
+    <TD><PRE><FONT face="Courier New" size=+0>#include "resource.h"
+MyMenu MENU DISCARDABLE&nbsp;
+BEGIN&nbsp;&nbsp;&nbsp; POPUP "Files"&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp; BEGIN
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MENUITEM "Open",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ID_OPEN
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MENUITEM "Save",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ID_SAVE
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MENUITEM SEPARATOR
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MENUITEM "Exit",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ID_EXIT
+&nbsp;&nbsp;&nbsp; END
+&nbsp;&nbsp;&nbsp; MENUITEM "Other",&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 65535
+END&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</FONT></PRE></TD></TR></TBODY></TABLE></CENTER></DIV>
+<P></P>
+<H4><FONT face="Times New Roman" size=-1><B>Файл заголовков 
+resource.h</B></FONT></H4>
+<P align=center></P>
+<DIV align=center>
+<CENTER>
+<TABLE bgColor=#ffffff border=1>
+  <TBODY>
+  <TR>
+    <TD><PRE><FONT face="Courier New" size=+0>//{{NO_DEPENDENCIES}}
+// Microsoft Developer Studio generated include file.
+// Used by dmenu.rc
+//
+#define MyMenu&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 101
+#define ID_OPEN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 40001
+#define ID_SAVE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 40002&nbsp;
+#define ID_EXIT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 40003
+// Next default values for new objects
+//&nbsp;
+#ifdef APSTUDIO_INVOKED
+#ifndef APSTUDIO_READONLY_SYMBOLS
+#define _APS_NEXT_RESOURCE_VALUE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 102
+#define _APS_NEXT_COMMAND_VALUE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 40004
+#define _APS_NEXT_CONTROL_VALUE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1000
+#define _APS_NEXT_SYMED_VALUE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 101
+#endif
+#endif</FONT></PRE></TD></TR></TBODY></TABLE></CENTER></DIV>
+<P></P>
+<H4><FONT face="Times New Roman" size=-1><B>Файл компиляции 
+makefile</B></FONT></H4>
+<P align=center></P>
+<DIV align=center>
+<CENTER>
+<TABLE bgColor=#ffffff border=1>
+  <TBODY>
+  <TR>
+    <TD><PRE><FONT face="Courier New" size=+0>#&nbsp;&nbsp; Make file for Turbo Assembler Demo menu
+#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; make -B
+#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; make -B -DDEBUG -DVERN&nbsp; for debug information and version
+NAME&nbsp;&nbsp;&nbsp; = dmenu
+OBJS&nbsp;&nbsp;&nbsp; = $(NAME).obj
+DEF&nbsp;&nbsp;&nbsp;&nbsp; = $(NAME).def
+RES&nbsp;&nbsp;&nbsp;&nbsp; = $(NAME).res
+!if $d(DEBUG)TASMDEBUG=/zi
+LINKDEBUG=/v
+!else
+TASMDEBUG=/l
+LINKDEBUG=
+!endif
+
+!if $d(VER2)
+TASMVER=/dVER2
+!elseif $d(VER3)
+TASMVER=/dVER3
+!else
+TASMVER=/dVER1
+!endif
+
+!if $d(MAKEDIR)
+IMPORT=$(MAKEDIR)\..\lib\import32
+!else
+IMPORT=import32
+!endif
+
+$(NAME).EXE: $(OBJS) $(DEF) $(RES)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tlink32 /Tpe /aa /c $(LINKDEBUG) $(OBJS),$(NAME),, $(IMPORT), $(DEF), $(RES)
+
+.asm.obj:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tasm32 $(TASMDEBUG) $(TASMVER) /m /mx /z /zd $&amp;.asm
+
+$(RES): $(NAME).RC
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; BRCC32 -32 $(NAME).RC</FONT></PRE></TD></TR></TBODY></TABLE></CENTER></DIV>
+  <p><div align="center"><a href="index.htm">	<img src="../../soder.gif" width=120 height=31 border=0 alt=""></a></div></p>
+</BODY></HTML>

@@ -1,0 +1,149 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0044)http://www.chat.ru/~win32asm/create_win.html -->
+<HTML><HEAD><TITLE>Создаем окно</TITLE>
+</HEAD>
+<BODY background="../../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial"> </font></b></div></p>
+
+<PRE>    <B> Основные шаги при создании окна:</B>
+    <B>1.</B> Получить дискриптор Вашей программы(обязательно)
+    <B>2.</B> Получить указатель на командную строку(не обязательно)
+    <B>3.</B> Зарегистрировать класс окна(не требуется, если Вы используете
+        встроенный тип окна, например MessageBox)
+    <B>4.</B> Создать окно(обязательно)
+    <B>5.</B> Показать окно(если хотите немедленно показать окно)
+    <B>6.</B> Обновить окно
+    <B>7.</B> Образовать бесконечный цикл, обрабатывающий сообщения окна
+    <B>8.</B> Если есть сообщения, то обработать специализированной функцией
+        ответственной за окно
+    <B>9.</B> Выйти из программы, если пользователь закрыл окно
+</PRE>
+<P>Разберем простую программу, которая выводит только окно.<BR>Я взял пример 
+программы Wap32.asm из пакета TASM и несколько упостил ее.</P><PRE class=dtext2>.386
+.model flat, stdcall
+include win32.inc</PRE>
+<P>Файл win32.inc содержит некоторые нужные константы и структуры</P><PRE class=dtext2>extrn            CreateWindowExA:PROC
+extrn            DefWindowProcA:PROC
+extrn            DispatchMessageA:PROC
+extrn            ExitProcess:PROC
+extrn            GetMessageA:PROC
+extrn            GetModuleHandleA:PROC
+extrn            LoadCursorA:PROC
+extrn            LoadIconA:PROC
+extrn            PostQuitMessage:PROC
+extrn            RegisterClassA:PROC
+extrn            ShowWindow:PROC
+extrn            TranslateMessage:PROC
+extrn            UpdateWindow:PROC
+
+
+.data
+
+newhwnd          dd 0
+msg              MSGSTRUCT   &lt;?&gt;
+wc               WNDCLASS    &lt;?&gt;
+hInst            dd 0
+szTitleName      db 'Win32 Assembly Program',0
+szClassName      db 'ASMCLASS32',0
+
+.code
+start:
+
+        push    0
+        call    GetModuleHandleA
+        mov     [hInst], eax</PRE>
+<P>Получим дискриптор программы.<BR>Далее инициализируем структуру WndClass для 
+регистрации окна</P><PRE class=dtext2>        mov     [wc.clsStyle], CS_HREDRAW + CS_VREDRAW + CS_GLOBALCLASS</PRE>
+<P><I>clsStyle</I> - определяет стиль класса</P><PRE class=dtext2>        mov     [wc.clsLpfnWndProc], offset WndProc</PRE>
+<P><I>clsLpfnWndProc</I> - указывает на процедуру окна</P><PRE class=dtext2>        mov     [wc.clsCbClsExtra], 0
+        mov     [wc.clsCbWndExtra], 0
+
+        mov     eax, [hInst]
+        mov     [wc.clsHInstance], eax</PRE>
+<P><I>clsHInstance</I> - содержит дискриптор программы</P><PRE class=dtext2>        push    IDI_APPLICATION
+        push    0
+        call    LoadIconA
+        mov     [wc.clsHIcon], eax
+
+        push    IDC_ARROW
+        push    0
+        call    LoadCursorA
+        mov     [wc.clsHCursor], eax
+
+        mov     [wc.clsHbrBackground], COLOR_WINDOW + 1
+        mov     dword ptr [wc.clsLpszMenuName], 0
+        mov     dword ptr [wc.clsLpszClassName], offset szClassName</PRE>
+<P><I>clsLpszClassName</I> - определяет имя класса окна</P><PRE class=dtext2>        push    offset wc
+        call    RegisterClassA</PRE>
+<P>Создаем окно:</P><PRE class=dtext2>        push    0
+        push    [hInst]                  ; <I>дискриптор окна</I>
+        push    0
+        push    0
+        push    CW_USEDEFAULT            ; <I>высота</I>
+        push    CW_USEDEFAULT            ; <I>ширина</I>
+        push    CW_USEDEFAULT            ; <I>y</I>
+        push    CW_USEDEFAULT            ; <I>x</I>
+        push    WS_OVERLAPPEDWINDOW      ; <I>стиль</I>
+        push    offset szTitleName       ; <I>заголовок окна</I>
+        push    offset szClassName       ; <I>имя класса</I>
+        push    0                        ; <I>дополнительный стиль</I>
+
+        call    CreateWindowExA
+
+        mov     [newhwnd], eax</PRE>
+<P><I>newhwnd</I> - дискриптор окна<BR>Покажем окно:</P><PRE class=dtext2>        push    SW_SHOWNORMAL
+        push    [newhwnd]
+        call    ShowWindow</PRE>
+<P>Обновим окно:</P><PRE class=dtext2>        push    [newhwnd]
+        call    UpdateWindow</PRE>
+<P>Создаем цикл для обработки сообщений окна</P><PRE class=dtext2>msg_loop:
+        push    0
+        push    0
+        push    0
+        push    offset msg
+        call    GetMessageA
+
+        cmp     ax, 0
+        je      end_loop
+
+        push    offset msg
+        call    TranslateMessage
+
+        push    offset msg
+        call    DispatchMessageA
+
+        jmp     msg_loop
+
+end_loop:</PRE>
+<P>выход из программы:</P><PRE class=dtext2>        push    [msg.msWPARAM]
+        call    ExitProcess</PRE>
+<P>Процедура окна:</P><PRE class=dtext2>WndProc          proc uses ebx edi esi, hwnd:DWORD, wmsg:DWORD,\
+                 wparam:DWORD, lparam:DWORD</PRE>
+<P>Win32 требует, чтобы EBX, EDI, и ESI были сохранены</P><PRE class=dtext2>        cmp     [wmsg], WM_DESTROY
+        je      wmdestroy
+
+        push    [lparam]
+        push    [wparam]
+        push    [wmsg]
+        push    [hwnd]
+        call    DefWindowProcA
+        jmp     finish
+
+wmdestroy:
+        push    0
+        call    PostQuitMessage
+        mov     eax, 0
+finish:
+        ret
+WndProc          endp
+ends
+end start</PRE>
+<P>Программу можно взять <A 
+href="create_w.zip">здесь</A><BR><BR>На 
+первый взгляд кажется, что слишком много написано для простой программы. На 
+самом же деле писать все полностью не нужно, достаточно написать файл один раз, 
+а потом использовать его как шаблон для своих новых программ. Можно создать 
+объектный файл и использовать его как загрузочный код, а писать только процедуру 
+окна(WinProc). </P>
+<p><div align="center"><a href="index.htm">	<img src="../../soder.gif" width=120 height=31 border=0 alt=""></a></div></p>
+</BODY></HTML>

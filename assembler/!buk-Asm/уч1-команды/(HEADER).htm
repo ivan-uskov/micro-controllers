@@ -1,0 +1,92 @@
+<html>
+
+<head>
+<meta name="Author" content="Dmitry L. Smirnoff (C) 1999">
+<title>Header</title>
+<base target="Main">
+
+<script language="JavaScript">
+<!--
+function RefreshTitle()
+{ var CurrT="_";
+  var T=top.Main.document.title; //Имя тек.раздела
+
+if(CurrT!=T)
+ {
+ CurrT=T;
+ document.forms.ffff.TitleString.value=T;
+ document.forms.ffff.TitleString.size =T.length+1;
+ }
+
+setTimeout("RefreshTitle()",1000);
+}
+//-->
+</script>
+</head>
+
+<body background="(h-bgr).gif" onLoad="RefreshTitle()">
+
+<MAP name="BC_Map">
+<AREA shape="rect" coords="2,2,25,25"
+ onMouseOver="document.BC.src='(h-cont)2.gif'"
+ onMouseOut ="document.BC.src='(h-cont).gif'"
+ href="Содержание.htm">
+</map>
+
+<MAP name="BL_Map">
+<AREA shape="rect" coords="2,2,25,25"
+ onMouseOver="document.BL.src='(h-back)2.gif'"
+ onMouseOut ="document.BL.src='(h-back).gif'"
+ onClick="history.back()">
+</map>
+
+<MAP name="BR_Map">
+<AREA shape="rect" coords="2,2,25,25"
+ onMouseOver="document.BR.src='(h-frwd)2.gif'"
+ onMouseOut ="document.BR.src='(h-frwd).gif'"
+ onClick="history.forward()">
+</map>
+
+<MAP name="BE_Map">
+<AREA shape="rect" coords="2,2,25,25"
+ onMouseOver="document.BE.src='(h-exit)2.gif'"
+ onMouseOut ="document.BE.src='(h-exit).gif'"
+ onClick="top.close()">
+</map>
+
+<table width="100%" border="0" cellspacing="1" cellpadding="0">
+<tr>
+ <td width="8" height="32" valign="top">&nbsp
+ </td>
+ <td width="100" height="32" valign="top">
+ <img name="BC" alt="Содержание" src="(h-cont).gif" usemap="#BC_Map"
+  border=0 align="absmiddle">
+ <img name="BL" alt="Назад" src="(h-back).gif" usemap="#BL_Map"
+  border=0 align="absmiddle">
+ <img name="BR" alt="Вперед" src="(h-frwd).gif" usemap="#BR_Map"
+  border=0 align="absmiddle">
+ </td>
+
+ <td width="*" height="32" valign="absmiddle">
+ <form name="ffff">
+  <p align="center">
+   -
+   <input type="text" name="TitleString" value="" readonly>
+   -
+  </p>
+ </form>
+ </td>
+
+ <td width="100" height="32" valign="top">
+ <img name="B1" src="(b).gif"
+  border=0 align="absmiddle">
+ <img name="B2" alt="Это Ваша оценка при выполнении теста" src="(b).gif"
+  border=0 align="absmiddle">
+ <img name="BE" alt="Выход" src="(h-exit).gif" usemap="#BE_Map"
+  border=0 align="absmiddle">
+ </td>
+</tr>
+</table>
+
+</body>
+</html>

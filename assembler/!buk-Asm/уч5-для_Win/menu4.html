@@ -1,0 +1,41 @@
+<HTML>
+<HEAD>
+<TITLE>Menu 4</TITLE>
+
+</HEAD>
+<BODY background="../../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial"> </font></b></div></p>
+
+
+<p class="dtext1">Установить новое меню можно с помощью функции SetMenu, указав ей дескриптор нового меню.
+<br>
+Вот пример:
+<pre class="dtext2">
+  push    offset szMenuName2 ;новое меню
+  push    [hInst]
+  call    LoadMenuA ;получаем hMenu
+;eax - hMenu
+  push    eax
+  push    [hwnd]    ; handle текущего окна
+  call    SetMenu   ; устанавливаем меню
+</pre>
+Для удаления меню нужно использовать DestroyMenu. В отличие от SetMenu с hMenu=NULL, DestroyMenu
+освобождает память.
+<pre class="dtext2">
+  push    [hwnd]
+  call    GetMenu   ; получим hMenu
+;eax - hMenu
+  push    eax
+  call    DestroyMenu
+
+  push    [hwnd]
+  call    DrawMenuBar ;перерисуем меню, точнее очистим
+</pre>
+
+
+<P CLASS="dtext1">
+Полный текст: <a href="cr_menu4.zip">cr_menu4.zip</a><P>
+<p><div align="center"><a href="res.html">	<img src="../../back.gif" width=66 height=29 border=0 alt=""></a></div></p>
+
+</BODY>
+</HTML>

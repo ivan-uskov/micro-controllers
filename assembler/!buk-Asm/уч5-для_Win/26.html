@@ -1,0 +1,20 @@
+<html>
+<head>
+<title>Рисование Прямоугольника</title>
+</head>
+<BODY background="../../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Рисование прямоугольника </font></b></div></p>
+
+<p>
+Прямоугольник можно нарисовать, обратившись к функции Rectangle(). Ее описание содержится в файле
+wingdi.h:
+<pre>
+  WINGDIAPI BOOL WINAPI Rectangle(HDC, int, int, int, int);
+</pre>
+Аргумент первый понятен без объяснений - хэндл контекста устройства. Остальные аргументы -
+координаты верхнего левого и нижнего правого углов прямоугольника. TRUE возвращает при нормальном
+завершении операции. Прямоугольник автоматически заполняется цветом и способом, определяемым
+текущей кистью.
+<p><div align="center"><a href="gr.html">	<img src="../../back.gif" width=66 height=29 border=0 alt=""></a></div></p>
+</body>
+</html>

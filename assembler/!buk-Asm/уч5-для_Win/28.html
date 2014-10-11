@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>Рисование Прямоугольника С Закругленными Краями</title>
+</head>
+<BODY background="../../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Рисование прямоугольника с закругленными краями </font></b></div></p>
+
+<p>
+Прямоугольник с закругленными краями рисуется с помощью функции RoundRect(). Из файла wingdi.h
+добываем ее описание.
+<pre>
+  WINGDIAPI BOOL  WINAPI RoundRect(HDC, int, int, int, int, int, int);
+</pre>
+Первые пять аргументов полностью идентичны аргументам функции Rectangle(). Последние два аргумента
+содержат ширину и высоту эллипса, определяющего дуги. После прорисовки прямоугольник закрашивается
+текущей кистью. В случае успешного завершения функция возвращает TRUE.
+<p><div align="center"><a href="gr.html">	<img src="../../back.gif" width=66 height=29 border=0 alt=""></a></div></p>
+</body>
+</html>

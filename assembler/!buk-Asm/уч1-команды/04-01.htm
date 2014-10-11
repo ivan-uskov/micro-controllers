@@ -1,0 +1,250 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<meta name="Author" content="Dmitry L. Smirnoff (C) 2001">
+<link REL="stylesheet" HREF="(Styles).css" TYPE="text/css">
+<title>4.1. Основные сведения о системе команд</title>
+</head>
+
+<body background="(Фон).gif">
+
+<hr>
+
+<p>При разработке системы команд 32-разрядных
+процессоров (i80386, i80486 и Pentium) пришлось решить
+следующие основные вопросы: 
+
+<ul>
+  <li>обеспечить совместимость по объектному коду с
+    предшествующими процессорами, но вместе с этим
+    ввести в команды 32-битные операнды и адреса;</li>
+  <li>расширить диапазон использования регистров
+    общею назначения в адресных вычислениях, в
+    частности, привлечь для этого регистры ЕАХ, ЕСХ и
+    EDX, 16-битные аналоги которых AX, CX и DX для адресации
+    не применялись;</li>
+  <li>по возможности ввести новые команды, которые
+    упрощают решение часто встречающихся
+    программных задач, например манипуляций
+    двоичными цепочками, двойного сдвига и другие.</li>
+</ul>
+
+<p>Разработчикам удалось решить все эти вопросы и
+реализовать гибкую и мощную систему более чем из
+200 команд, являющуюся надмножеством для системы
+команд предыдущих 16-разрядных процессоров (i8086 и
+i80286). В большинство команд внесены следующие
+изменения: 
+
+<ol>
+  <li>Почти все команды оперируют 8/16/32-битными
+    регистрами процессора.</li>
+  <li>В большинстве команд с обращением к памяти
+    допускается применение новых базовых и
+    индексных регистров. В таблице 1 показано, что
+    базовым регистром может служить любой из восьми
+    регистров общего назначения, а индексным - любой
+    из них, кроме ESP.</li>
+  <li>В большинстве команд с обращением к памяти
+    допускается масштабированное индексирование,
+    т.е. содержимое индексного регистра до
+    использования его в адресных вычислениях можно
+    умножить на 2, 4 или 8. Этот новый режим адресации
+    упрощает операции над многомерными массивами.</li>
+  <li>В большинстве команд с обращением к памяти
+    разрешается использовать любой из шести
+    сегментных регистров. Конечно, во всех командах
+    сохранены сегментные регистры, принимаемые по
+    умолчанию, но их можно изменить с помощью
+    специального префикса замены сегмента. Отметим,
+    что новые сегментные регистры FS и GS не
+    принимаются по умолчанию ни и одной команде.</li>
+</ol>
+<div align="center"><center>
+
+<table WIDTH="80%" BgColor="#C0C0C0" BorderColorLight="#FFFFFF" BorderColorDark="#000000"
+BORDER="2" RULES="ALL">
+  <caption>Таблица 1. Использование регистров общего
+  назначения в 32-разрядных командах</caption>
+  <tr>
+    <td WIDTH="60%" VALIGN="top" bgcolor="#00FFFF">Применение (команда)</td>
+    <td WIDTH="5%" VALIGN="top" bgcolor="#00FFFF">EAX</td>
+    <td WIDTH="5%" VALIGN="top" bgcolor="#00FFFF">EBX</td>
+    <td WIDTH="5%" VALIGN="top" bgcolor="#00FFFF">ECX</td>
+    <td WIDTH="5%" VALIGN="top" bgcolor="#00FFFF">EDX</td>
+    <td WIDTH="5%" VALIGN="top" bgcolor="#00FFFF">ESI</td>
+    <td WIDTH="5%" VALIGN="top" bgcolor="#00FFFF">EDI</td>
+    <td WIDTH="5%" VALIGN="top" bgcolor="#00FFFF">EBP</td>
+    <td WIDTH="5%" VALIGN="top" bgcolor="#00FFFF">ESP</td>
+  </tr>
+  <tr>
+    <td WIDTH="60%" VALIGN="top">Пересылка данных (<i>mov</i>)</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">*</td>
+  </tr>
+  <tr>
+    <td WIDTH="60%" VALIGN="top">Базовый регистр</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+  </tr>
+  <tr>
+    <td WIDTH="60%" VALIGN="top">Индексный регистр</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+  </tr>
+  <tr>
+    <td WIDTH="60%" VALIGN="top">Умножение (<i>imul</i>)</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+  </tr>
+  <tr>
+    <td WIDTH="60%" VALIGN="top">Деление - делимое (<i>div, idiv</i>)</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+  </tr>
+  <tr>
+    <td WIDTH="60%" VALIGN="top">Деление - остаток (<i>div, idiv</i>)</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+  </tr>
+  <tr>
+    <td WIDTH="60%" VALIGN="top">Счетчик цикла (<i>loop</i>)</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+  </tr>
+  <tr>
+    <td WIDTH="60%" VALIGN="top">Данные для цепочки (<i>lods, stos</i>)</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+  </tr>
+  <tr>
+    <td WIDTH="60%" VALIGN="top">Цепочка-источник (<i>lods, stos, movs</i>)</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+  </tr>
+  <tr>
+    <td WIDTH="60%" VALIGN="top">Цепочка-получатель (<i>lods, stos, movs</i>)</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+  </tr>
+  <tr>
+    <td WIDTH="60%" VALIGN="top">Адрес порта ввода-вывода (<i>in, out,
+    ins, outs</i>)</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+  </tr>
+  <tr>
+    <td WIDTH="60%" VALIGN="top">Данные для ввода-вывода (<i>in, out, ins,
+    outs</i>)</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+  </tr>
+  <tr>
+    <td WIDTH="60%" VALIGN="top">Данные для таблицы (<i>xlat</i>)</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+  </tr>
+  <tr>
+    <td WIDTH="60%" VALIGN="top">Указатель таблицы (<i>xlat</i>)</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">+</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+    <td WIDTH="5%" VALIGN="top">-</td>
+  </tr>
+</table>
+</center></div>
+
+<blockquote>
+<p><b>Примечание</b>: "+" - регистр используется, "-" - регистр не используется,
+"*" - не рекомендуется использовать регистр.</p>
+</blockquote>
+
+<hr>
+
+<p>Следующий раздел - “<a href="04-02.htm">4.2. Общий формат
+команды</a>”</p>
+</body>
+</html>

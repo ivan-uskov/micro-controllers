@@ -1,0 +1,453 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0036)http://www.chat.ru/~win32asm/20.html -->
+<HTML><HEAD><TITLE>Полосы Прокрутки</TITLE>
+</head>
+<BODY background="../../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Полосы прокрутки </font></b></div></p>
+
+<P>Мне кажется, что у читателя может возникнуть вопрос: что делать в тех 
+случаях, когда нам не нужно масшабировать bitmap, но нужно иметь возможность 
+просматривать все части изображения? Ответ заключен в названии данного раздела - 
+использование полос прокрутки. 
+<P>Давайте, уважаемый читатель, чуть-чуть изменим предыдущую программу для того, 
+чтобы продемонстрировать использование полос прокрутки, и посмотрим, как она 
+будет работать. Текст программы с внесенными изменениями: <PRE class=dtext2>.386
+.model flat, stdcall
+include win32.inc
+
+extrn            BeginPaint:PROC
+extrn            BitBlt:PROC
+extrn            CreateCompatibleDC:PROC
+extrn            CreateWindowExA:PROC
+extrn            DefWindowProcA:PROC
+extrn            DeleteDC:PROC
+extrn            DeleteObject:PROC
+extrn            DispatchMessageA:PROC
+extrn            EndPaint:PROC
+extrn            ExitProcess:PROC
+extrn            GetClientRect:PROC
+extrn            GetMessageA:PROC
+extrn            GetModuleHandleA:PROC
+extrn            GetObjectA:PROC
+extrn            GetStockObject:PROC
+extrn            InvalidateRect:PROC
+extrn            LoadCursorA:PROC
+extrn            LoadIconA:PROC
+extrn            LoadImageA:PROC
+extrn            PostQuitMessage:PROC
+extrn            RegisterClassA:PROC
+extrn            SelectObject:PROC
+extrn            SetScrollPos:PROC
+extrn            SetScrollRange:PROC
+extrn            ShowWindow:PROC
+extrn            StretchBlt:PROC
+extrn            TranslateMessage:PROC
+extrn            UpdateWindow:PROC
+
+BITMAP struct
+   bmType       dd ?
+   bmWidth      dd ?
+   bmHeight     dd ?
+   bmWidthBytes dd ?
+   bmPlanes     dw ?
+   bmBitsPixel  dw ?
+   bmBits       dd ?
+BITMAP ends
+
+LR_LOADFROMFILE  = 010h
+SRCCOPY          = 00CC0020h
+IMAGE_BITMAP     = 0
+
+TRUE             = 1
+FALSE            = 0
+
+
+; Scroll Bar Constants
+SB_HORZ          = 0
+SB_VERT          = 1
+SB_CTL           = 2
+SB_BOTH          = 3
+
+; Scroll Bar Commands
+SB_LINEUP        = 0
+SB_LINELEFT      = 0
+SB_LINEDOWN      = 1
+SB_LINERIGHT     = 1
+SB_PAGEUP        = 2
+SB_PAGELEFT      = 2
+SB_PAGEDOWN      = 3
+SB_PAGERIGHT     = 3
+SB_THUMBPOSITION = 4
+SB_THUMBTRACK    = 5
+SB_TOP           = 6
+SB_LEFT          = 6
+SB_BOTTOM        = 7
+SB_RIGHT         = 7
+SB_ENDSCROLL     = 8
+
+.data
+
+newhwnd          dd 0
+msg              MSGSTRUCT   <?>
+wc               WNDCLASS    <?>
+
+hDC              dd ?
+hCompatibleDC    dd ?
+PaintStruct      PAINTSTRUCT <?>
+hBitmap          dd ?
+hOldBitmap       dd ?
+Rect             RECT <?>
+Bitmap           BITMAP <?>
+nHorizDifference dd 0
+nVertDifference  dd 0
+nHorizPosition   dd 0
+nVertPosition    dd 0
+
+hInstance        dd 0
+
+szTitleName      db 'DCDemo', 0
+szClassName      db 'ASMCLASS32',0
+szImg            db 'IMG.BMP',0
+
+.code
+;-----------------------------------------------------------------------------
+start:
+        call    GetModuleHandleA, 0
+        mov     [hInstance], eax
+
+; initialize the WndClass structure
+        mov     [wc.clsStyle], CS_HREDRAW + CS_VREDRAW
+        mov     [wc.clsLpfnWndProc], offset DCDemoWndProc
+        mov     [wc.clsCbClsExtra], 0
+        mov     [wc.clsCbWndExtra], 0
+
+        mov     eax, [hInstance]
+        mov     [wc.clsHInstance], eax
+
+        call    LoadIconA, 0, IDI_APPLICATION
+        mov     [wc.clsHIcon], eax
+
+        call    LoadCursorA, 0 ,IDC_ARROW
+        mov     [wc.clsHCursor], eax
+
+        call    GetStockObject, WHITE_BRUSH
+        mov     [wc.clsHbrBackground], eax
+
+        mov     [wc.clsLpszMenuName], 0
+        mov     [wc.clsLpszClassName], offset szClassName
+
+        call    RegisterClassA, offset wc
+
+        call    CreateWindowExA, 0,offset szClassName,offset szTitleName, \
+                WS_OVERLAPPEDWINDOW,CW_USEDEFAULT, \
+                CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,0,0, \
+                [hInstance], 0
+
+        mov     [newhwnd], eax
+
+        call    ShowWindow, [newhwnd], SW_SHOWNORMAL
+        call    UpdateWindow, [newhwnd]
+
+msg_loop:
+        call    GetMessageA, offset msg, 0, 0, 0
+        .if     eax != 0
+                call    TranslateMessage, offset msg
+                call    DispatchMessageA, offset msg
+                jmp     msg_loop
+        .endif
+        call    ExitProcess, [msg.msWPARAM]
+
+
+;-----------------------------------------------------------------------------
+DCDemoWndProc    proc uses ebx edi esi, hwnd:DWORD, wmsg:DWORD,\
+                 wparam:DWORD, lparam:DWORD
+
+        cmp     [wmsg], WM_CREATE
+        je      wmcreate
+        cmp     [wmsg], WM_PAINT
+        je      wmpaint
+        cmp     [wmsg], WM_VSCROLL
+        je      wmvscroll
+        cmp     [wmsg], WM_HSCROLL
+        je      wmhscroll
+        cmp     [wmsg], WM_DESTROY
+        je      wmdestroy
+
+        call    DefWindowProcA, [hwnd],[wmsg],[wparam],[lparam]
+        jmp     finish
+
+wmcreate:
+        call    LoadImageA, 0,offset szImg,IMAGE_BITMAP, \
+                0,0,LR_LOADFROMFILE
+        mov     [hBitmap], eax
+        mov     eax, 0
+        jmp     finish
+
+wmpaint:
+        call    BeginPaint, [hwnd], offset PaintStruct
+        mov     [hDC], eax
+
+        call    GetObjectA, [hBitmap], size BITMAP, offset Bitmap
+
+        call    CreateCompatibleDC, [hDC]
+        mov     [hCompatibleDC], eax
+
+        call    SelectObject, [hCompatibleDC], [hBitmap]
+        mov     [hOldBitmap], eax
+
+        call    GetClientRect, [hwnd], offset Rect
+
+        call    BitBlt, [hDC],0,0,[Rect.rcRight],[Rect.rcBottom], \
+                [hCompatibleDC],[nHorizPosition],[nVertPosition], \
+                SRCCOPY
+
+        mov     eax, [Bitmap.bmWidth]
+        sub     eax, [Rect.rcRight]
+        mov     [nHorizDifference], eax
+
+        .if     eax &gt; 0
+                call    SetScrollRange, [hwnd],SB_HORZ,0, \
+                        [nHorizDifference],TRUE
+        .else
+                call    SetScrollRange, [hwnd],SB_HORZ,0,0,TRUE
+        .endif
+
+        mov     eax, [Bitmap.bmHeight]
+        sub     eax, [Rect.rcBottom]
+        mov     [nVertDifference], eax
+
+        .if     eax &gt; 0
+                call    SetScrollRange, [hwnd],SB_VERT,0, \
+                [nVertDifference],TRUE
+        .else
+                call    SetScrollRange, [hwnd],SB_VERT,0,0,TRUE
+        .endif
+
+        call    SelectObject, [hCompatibleDC], [hOldBitmap]
+        call    DeleteDC, [hCompatibleDC]
+        call    EndPaint, [hwnd], offset PaintStruct
+        mov     eax, 0
+        jmp     finish
+
+wmvscroll:
+        movzx   eax, [word ptr wparam]
+        .if     eax == SB_LINEDOWN
+                mov      eax, [nVertPosition]
+                .if eax &lt; [nVertDifference]
+                    inc  [nVertPosition]
+                .endif
+        .elseif eax == SB_LINEUP
+                .if [nVertPosition] &gt; 0
+                    dec  [nVertPosition]
+                .endif
+        .elseif eax == SB_THUMBTRACK
+                 movzx   eax, [word ptr wparam+2]
+                 mov     [nVertPosition], eax
+        .endif
+        call    SetScrollPos, [hwnd],SB_VERT,[nVertPosition],TRUE
+        call    InvalidateRect, [hwnd],0,TRUE
+        mov     eax, 0
+        jmp     finish
+
+wmhscroll:
+        movzx   eax, [word ptr wparam]
+        .if     eax == SB_LINEDOWN
+                mov      eax, [nHorizPosition]
+                .if eax &lt; [nHorizDifference]
+                    inc  [nHorizPosition]
+                .endif
+        .elseif eax == SB_LINEUP
+                .if [nHorizPosition] &gt; 0
+                    dec  [nHorizPosition]
+                .endif
+        .elseif eax == SB_THUMBTRACK
+                 movzx   eax, [word ptr wparam+2]
+                 mov     [nHorizPosition], eax
+        .endif
+        call    SetScrollPos, [hwnd],SB_HORZ,[nHorizPosition],TRUE
+        call    InvalidateRect, [hwnd],0,TRUE
+        mov     eax, 0
+        jmp     finish
+
+wmdestroy:
+        call    DeleteObject, [hBitmap]
+        call    PostQuitMessage, 0
+        mov     eax, 0
+finish:
+        ret
+DCDemoWndProc          endp
+ends
+end start
+</PRE>
+<!--<CENTER>Вид окна, создаваемой программой:<BR><IMG alt="Окно DCDemo" height=275 
+src="20.files/dcdemo2.gif" width=400> </CENTER>-->
+<P>Если в окне, создаваемом программой, не отображаются горизонтальная и вертикальная полосы прокрутки, 
+необходимо уменьшить размеры окна по горизонтали и вертикали. 
+<P>Появились полосы прокрутки? Давайте разберемся, благодаря чему это произошло. 
+
+<P>Во-первых, если сравнить вызовы функций CreateWindowEx() в этой и предыдущей 
+программах, то можно увидеть, что у окна появились два новых стиля - WS_HSCROLL 
+и WS_VSCROLL. Эти стили определяют наличие у окна горизотнальной и вертикальной 
+полос прокрутки соответственно. Первый шаг сделан. Этот шаг можно было бы 
+сделать и по-другому, определив полосы прокрутки как дочерние окна, но о 
+дочерних окнах мы будем говорить позже. Разница между полосами прокрутки, 
+являющимися частью окна, и полосами прокрутки - дочерними окнами состоит в том, 
+что дочерние окна имеют встроенный клавиатурный интерфейс, позволяющий 
+воздействовать на полосу прокрутки с помощью клавиатуры. Встроенным полосам 
+прокрутки, к сожалению, досталось только управление с помощью курсора мыши. 
+<P>Теперь необходимо определить диапазон прокрутки, который определяет число 
+шагов между крайними позициями бегунка (слайдера). По умолчанию для полос 
+прокрутки, являющихся частью окна, этот диапазон определен от 0 до 100. Для того 
+чтобы изменить диапазон прокрутки, необходимо вызвать функцию SetScrollRange(), 
+которая в файле winuser.h определена следующим образом: <PRE>  WINUSERAPI BOOL WINAPI SetScrollRange(HWND hWnd, int nBar,
+                                        int nMinPos, int nMaxPos,
+                                        BOOL bRedraw);
+</PRE>Первый аргумент функции - хэндл окна, которому принадлежат полосы 
+прокрутки. Второй аргумент определяет, для какой полосы прокрутки (вертикальной 
+или горизонтальной) устанавливается диапозон. В данном случае этот аргумент 
+может принимать значение SB_VERT или SB_HORZ, что определяет работу с 
+вертикальной или горизонтальной полосой прокрутки. Третий и четвертый аргументы 
+непосредственно указывают нижнюю и верхнюю границу диапозона прокрутки. Пятый 
+аргумент представляет собой флаг, определяющий, нужно ли перерисовывать полосу 
+прокрутки после определения диапозона. TRUE - полоса прокрутки перерисовывается, 
+FALSE - перерисовка не нужна. Заметьте, что если диапазон прокрутки определен от 
+0 до 0, то полоса прокрутки становится невидимой. Это свойство используется и в 
+приведенной выше программе. В том случае, когда размеры окна превышают размеры 
+отображаемого bitmap'а, у полос прокрутки устанавливается диапазон от 0 до 0, 
+следовательно, полоса прокрутки скрывается. 
+<P>В данной случае с помощью функции SetScrollRange() диапазон прокрутки 
+определен как разность между размером bitmap'а и размера окна по вертикали и по 
+горизонтали, т.е. шаг полосы прокрутки соответствует одному пикселю. 
+<P>Воздействовать на полосы прокрутки можно по-разному: во-первыхб можно 
+щелкнуть клавишей мыши на стрелах, расположенных по краям полосы; во-вторых, 
+можно щелкнуть на полосе выше или ниже слайдера. Наконец, можно перетащить 
+слайдер на другое место. Все эти воздействия приводят к тому, что оконная 
+функция окна, которому принадлежат полосы прокрутки, получает сообщение 
+WM_VSCROLL (если действия производились вертикальной полосой) или WM_HSCROLL 
+(реакция на воздействие на горизонтальную полосу). 
+<P>Характер воздействия оконная функция может определить по параметрам 
+сообщения. Младшее слово wParam, которое и определяет характер воздействия на 
+полосу прокрутки, может принимать значения, прведенные в таблице: 
+<CENTER>
+<H3>Идентификаторы характеров воздействия на полосы прокрутки</H3>
+<TABLE border=1 width="90%">
+  <TBODY>
+  <TR>
+    <TD align=middle bgColor=#000050 width="20%"><B>Параметр</B></TD>
+    <TD align=middle bgColor=#000050 width="10%"><B>Значение</B></TD>
+    <TD align=middle bgColor=#000050 width="50%"><B>Описание</B></TD></TR>
+  <TR>
+    <TD>SB_LINEUP</TD>
+    <TD align=middle>0</TD>
+    <TD>Используется только с WM_VSCROLL, щелчок мышью на стрелке вверх, 
+      приводит к прокрутке на одну "строку" вверх</TD></TR>
+  <TR>
+    <TD>SB_LINELEFT</TD>
+    <TD align=middle>0</TD>
+    <TD>Используется только с WM_HSCROLL, щелчок мышью на стрелке влево, 
+      приводит к прокрутке на одну "колонку" влево</TD></TR>
+  <TR>
+    <TD>SB_LINEDOWN</TD>
+    <TD align=middle>1</TD>
+    <TD>Используется только с WM_VSCROLL, щелчок мышью на стрелке вниз, 
+      приводит к прокрутке на одну "строку" вниз</TD></TR>
+  <TR>
+    <TD>SB_LINERIGHT</TD>
+    <TD align=middle>1</TD>
+    <TD>Используется только с WM_HSCROLL, щелчок мышью на стрелке вправо, 
+      приводит к прокрутке на одну "колонку" вправо</TD></TR>
+  <TR>
+    <TD>SB_PAGEUP</TD>
+    <TD align=middle>2</TD>
+    <TD>Используется только с WM_VSCROLL, щелчок мышью на полосе прокрутки 
+      выше слайдера, приводит к прокрутке на одну "страницу" вверх</TD></TR>
+  <TR>
+    <TD>SB_PAGELEFT</TD>
+    <TD align=middle>2</TD>
+    <TD>Используется только с WM_HSCROLL, щелчок мышью на полосе прокрутки 
+      левее слайдера, приводит к прокрутке на одну "страницу" влево</TD></TR>
+  <TR>
+    <TD>SB_PAGEDOWN</TD>
+    <TD align=middle>3</TD>
+    <TD>Используется только с WM_VSCROLL, щелчок мышью на полосе прокрутки 
+      ниже слайдера, приводит к прокрутке на одну "страницу" вниз</TD></TR>
+  <TR>
+    <TD>SB_PAGERIGHT</TD>
+    <TD align=middle>3</TD>
+    <TD>Используется только с WM_HSCROLL, щелчок мышью на полосе прокрутки 
+      правее слайдера, приводит к прокрутке на одну "страницу" вправо</TD></TR>
+  <TR>
+    <TD>SB_THUMBPOSITION</TD>
+    <TD align=middle>4</TD>
+    <TD>Перетаскивание слайдера закончено, пользователь отжал клавишу 
+  мыши</TD></TR>
+  <TR>
+    <TD>SB_THUMBTRACK</TD>
+    <TD align=middle>5</TD>
+    <TD>Слайдер перетаскивается с помощью мыши, приводит к перемещению 
+      содержимого экрана</TD></TR>
+  <TR>
+    <TD>SB_TOP</TD>
+    <TD align=middle>6</TD>
+    <TD>Используется только с вертикальными полосами прокрутки, реализованными 
+      как дочерние окна, пользователь нажал клавищу "Home"</TD></TR>
+  <TR>
+    <TD>SB_LEFT</TD>
+    <TD align=middle>6</TD>
+    <TD>Используется только с горизонтальными полосами прокрутки, 
+      реализованными как дочерние окна, пользователь нажал клавишу "Home" </TD></TR>
+  <TR>
+    <TD>SB_BOTTOM</TD>
+    <TD align=middle>7</TD>
+    <TD>Используется только с вертикальными полосами прокрутки, реализованными 
+      как дочерние окна, пользователь нажал клавищу "End"</TD></TR>
+  <TR>
+    <TD>SB_RIGHT</TD>
+    <TD align=middle>7</TD>
+    <TD>Используется только с горизонтальными полосами прокрутки, 
+      реализованными как дочерние окна, пользователь нажал клавишу "End"</TD></TR>
+  <TR>
+    <TD>SB_ENDSCROLL</TD>
+    <TD align=middle>8</TD>
+    <TD>Пользователь отпустил клавишу мыши после удержания ее нажатой на 
+      стрелке или на полосе прокрутке</TD></TR></TBODY></TABLE></CENTER>
+<P>В таблице показано, что прокрутка при нажатии клавиши мыши в некоторых 
+случаях производится на одну строку и одну страницу. В данном случае необходимо 
+осознать, что понятие "строка" и "страница" ничего общего с текстовой и 
+страницей не имеют. Этими понятиями я заменил условные единицы, на которые 
+прокручивается изображение в окне. К примеру, в приведенной программе строка 
+соответствует один пиксель, а понятие страницы вовсе не определено (что есть 
+страница для картинки?). 
+<P>Старшее слово wparam используется только в тех случаях, когда младшее слово 
+wparam равно SB_THUMBPOSITION или SB_THUMBTRACK. В этих случаях оно хранит 
+позицию слайдера. В остальных случаях это значение не используется. 
+<P>В тех случаях, когда полосы прокрутки реализованы как дочерние окна, lparam 
+содержит хэндл окна полосы прокрутки. Если полоса реализована как часть окна, 
+этот параметр не используется. 
+<P>После того, как мы зафиксировали факт произведенного с полосой прокрутки 
+действия и характер действия, программа должна правильно отреагировать на него и 
+при необходимости изменить позицию слайдера в соответствии с произведенным 
+воздействием. Делается это с помощью обращения к функции SetScrollPos(), которая 
+следующим образом описана в файле winuser.h: <PRE>   WINUSERAPI int WINAPI SetScrollPos(HWND hWnd, int nBar, int nPos, BOOL bRedraw);
+</PRE>Первый аргумент - это хэндл окна, содержащего полосу прокрутки (в этом 
+случае, если полоса прокрутки реализована как часть окна), второй аргумент может 
+принимать значение SB_VERT или SB_HORZ (об этих значениях говорилось выше), 
+третий аргумент определяет, в какую позицию должен быть установлен слайдер. И 
+наконец, четвертый аргумент определяет, нужно ли перерисовывать полосу прокрутки 
+после установки слайдера. Если последний аргумент равен TRUE, то полоса 
+прокрутки будет перерисована. 
+<P>Для того чтобы в соответствии с новой позицией слайдера изменилось 
+изображение в рабочей области, окну необходимо послать сообщение WM_PAINT, 
+которое заставит окно перерисоваться. В программе, приведенной выше, сообщение 
+WM_PAINT окну посылается с помощью вызова функции InvalidateRect(). Из этого 
+следует, что код обработки сообщения WM_PAINT в оконной функции должен 
+разрабатываться с учетом того, что содержимое окна может прокручиваться 
+(скроллироваться). 
+<P>И в заключение мне бы хотелось слегка посыпать голову пеплом. Любой хоть 
+немного понимающий в программировании человек ужаснется, когда увидит, что я 
+загружаю изображение из файла при каждой перерисовке окна (в программе, 
+использующей функцию StretchBlt()). Это резко замедляет работу программы и 
+занимает слишком много ресурсов. Но в данном случае целью было не написание 
+программы, работающей оптимальным образом, а простая демонстрация того, что 
+должна сделать программа для того, чтобы вывести на экран изображение. 
+<p><div align="center"><a href="index.htm">	<img src="../../soder.gif" width=120 height=31 border=0 alt=""></a></div></p></BODY></HTML>

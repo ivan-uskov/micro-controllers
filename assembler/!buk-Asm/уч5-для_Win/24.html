@@ -1,0 +1,83 @@
+<html>
+<head>
+<title>Создание Пера Для Рисования Линий</title>
+</head>
+<BODY background="../../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Создание пера для рисования линий </font></b></div></p>
+
+<p>
+Рисование графических примитивов производится с помощью перьев. В Windows'95 есть три
+предопределенных пера - черное (BLACK_PEN), белое (WHITE_PEN) и прозрачное (NULL_PEN). При
+создании окна по умолчанию ему присваивается черное перо. Хэндл каждого из них может быть получен
+с помощью функции GetStockObject(). Естественно, что программиста не может удовлетворитьь столь
+малое число перьев, поэтому для прорисовки линий можно воспользоваться пером, созданным в
+программе посредством вызова функции CreatePen(). Как всегда, обращаемся к файлам заголовков, в
+данном случае - к файлу wingdi.h:
+<pre>
+  WINGDIAPI HPEN   WINAPI CreatePen(int, int, COLORREF);
+</pre>
+Первый аргумент определяет стиль кисти. В wingdi.h эти стили описаны достаточно образно. Для того
+чтобы сохранить стиль этого описания (не путать со стилем кисти) я включил его третьим столбцом
+в таблице:
+<center>
+<h3>Возможные стили кисти</h3>
+<table width=90% border=1><tr>
+<td align=center width=25% bgcolor=#000050><b>Стиль пера</b></td>
+<td align=center width=15% bgcolor=#000050><b>Значение</b></td>
+<td align=center width=15% bgcolor=#000050><b>Описание</b></td>
+<td align=center width=35% bgcolor=#000050><b>Эффект</b></td>
+</tr><tr>
+<td>PS_SOLID</td>
+<td align=center>0</td>
+<td align=center>______</td>
+<td>Сплошная линия</td>
+</tr><tr>
+
+<td>PS_DASH</td>
+<td align=center>1</td>
+<td align=center>------</td>
+<td>Пунктирная линия</td>
+</tr><tr>
+
+<td>PS_DOT</td>
+<td align=center>2</td>
+<td align=center>......</td>
+<td>Линия из точек</td>
+</tr><tr>
+
+<td>PS_DASHDOT</td>
+<td align=center>3</td>
+<td align=center>_._._._</td>
+<td>Штрих-пунктирная линия (тире-точка)</td>
+</tr><tr>
+
+<td>PS_DASHDOTDOT</td>
+<td align=center>4</td>
+<td align=center>_.._.._</td>
+<td>Штрих-пунктирная линия (тире-точка-точка)</td>
+</tr><tr>
+
+<td>PS_NULL</td>
+<td align=center>5</td>
+<td align=center>&nbsp;</td>
+<td>Прозрачное перо</td>
+</tr><tr>
+
+<td>PS_INSIDEFRAME</td>
+<td align=center>6</td>
+<td align=center>&nbsp;</td>
+<td>При рисовании замкнутой фигуры граница фигуры будет определятся по внешнему краю, а не по
+середине линии (если толщина пера более 1 пикселя)</td>
+</tr></table></center>
+<p>
+Второй аргумент функции CreatePen() - толщина пера в логических единицах. Если этот аргумент
+равен 0, то толщина пера делается равной одному пикселю.
+<p>
+Третий аргумент - цвет чернил. Теперь для того, чтобы мы могли использовать наше перо, необходимо
+сделать его текущим в контексте устройства. Делается это уже давно знакомой нам функцией
+SelectObject(). После того, как мы отработаем с пером, необходимо удалить его, вызвав функцию
+DeleteObject().
+
+<p><div align="center"><a href="gr.html">	<img src="../../back.gif" width=66 height=29 border=0 alt=""></a></div></p>
+</body>
+</html>

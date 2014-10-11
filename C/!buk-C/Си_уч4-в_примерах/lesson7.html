@@ -1,0 +1,42 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Урок 7</title>
+</head>
+
+<body background="../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Пример 7 </font></b></div></p>
+
+<p><font>&nbsp;&nbsp;&nbsp; В этом уроке разговор пойдет о указателях, эта сложная тема для начинающих поэтому если вы ее не поймете то советую обратится к какой либо литературе (например, книге Бьерна Страуструпа
+"Введение в язык С++").<br>
+&nbsp;&nbsp;&nbsp; Указатели в С++ использются для связи переменных с машинными адресами. Если
+</font><font face="Courier New"><i> V</i></font><font> – переменная, то
+</font><i><font face="Courier New"> &amp;V</font></i><font> – ее адрес, или место в памяти, где хранится ее значение.
+</font><font face="Courier New"><i> &amp;</i></font><font> - это оператор определения памяти. В программе можно объявить
+переменные-указатели и затем использовать их для получения адресов. Приведем пример:</font></p>
+<p><font color="#0000FF" face="Courier New">int a = 2;<br>
+int b = 4;<br>
+int *p;<br>
+p = &amp;a;<br>
+*p = 8;<br>
+p = &amp;b;<br>
+*p = 6;</font></p>
+<p><font>Здесь в первых двух строках объявляются переменные
+</font><font face="Courier New" color="#0000FF"> a</font><font> и
+</font><font color="#0000FF" face="Courier New"> b</font><font> типа int, в третей строке объявляется указатель на int. В четвертой строке указатель
+</font><font color="#0000FF" face="Courier New">p</font><font>
+берет адрес переменной </font><font color="#0000FF" face="Courier New">a</font><font>, в пятой строке переменной на которую указывает указатель (в данном случае
+</font><font color="#0000FF" face="Courier New">a</font><font>) присваевается значение 8. В шестой и седьмой
+строках указатель берет адрес переменной </font><font color="#0000FF" face="Courier New"> b</font><font> и меняет ее значение на 6.</font></p>
+
+<hr>
+<p align="center"><a href="lesson6.html"><font color="#000000">предыдущий
+пример</font></a><font color="#000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="lesson8.html">следующий пример</a></font></p>
+<p><div align="center"><a href="index.html">	<img src="../soder.gif" width=120 height=31 border=0 alt=""></a></div></p>
+</body>
+
+</html>

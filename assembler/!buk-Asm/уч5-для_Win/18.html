@@ -1,0 +1,412 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0036)http://www.chat.ru/~win32asm/18.html -->
+<HTML><HEAD><TITLE>Пишем Программу</TITLE>
+</head>
+<BODY background="../../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Пишем программу </font></b></div></p>
+
+<P>Наша программа будет отображать bitmap в окне и при необходимости производить 
+его масштабирование: <PRE class=dtext2>.386
+.model flat, stdcall
+include win32.inc
+
+extrn            BeginPaint:PROC
+extrn            CreateCompatibleDC:PROC
+extrn            CreateWindowExA:PROC
+extrn            DefWindowProcA:PROC
+extrn            DeleteDC:PROC
+extrn            DeleteObject:PROC
+extrn            DispatchMessageA:PROC
+extrn            EndPaint:PROC
+extrn            ExitProcess:PROC
+extrn            GetClientRect:PROC
+extrn            GetMessageA:PROC
+extrn            GetModuleHandleA:PROC
+extrn            GetObjectA:PROC
+extrn            GetStockObject:PROC
+extrn            LoadCursorA:PROC
+extrn            LoadIconA:PROC
+extrn            LoadImageA:PROC
+extrn            PostQuitMessage:PROC
+extrn            RegisterClassA:PROC
+extrn            SelectObject:PROC
+extrn            ShowWindow:PROC
+extrn            StretchBlt:PROC
+extrn            TranslateMessage:PROC
+extrn            UpdateWindow:PROC
+
+BITMAP struct
+   bmType       dd ?
+   bmWidth      dd ?
+   bmHeight     dd ?
+   bmWidthBytes dd ?
+   bmPlanes     dw ?
+   bmBitsPixel  dw ?
+   bmBits       dd ?
+BITMAP ends
+
+LR_LOADFROMFILE  = 010h
+SRCCOPY          = 00CC0020h
+IMAGE_BITMAP     = 0
+
+.data
+
+newhwnd          dd 0
+msg              MSGSTRUCT   <?>
+wc               WNDCLASS    <?>
+
+hDC              dd ?
+hCompatibleDC    dd ?
+PaintStruct      PAINTSTRUCT <?>
+hBitmap          dd ?
+hOldBitmap       dd ?
+Rect             RECT <?>
+Bitmap           BITMAP <?>
+
+hInstance        dd 0
+
+szTitleName      db 'DCDemo', 0
+szClassName      db 'ASMCLASS32',0
+szImg            db 'IMG.BMP',0
+
+.code
+;-----------------------------------------------------------------------------
+start:
+        call    GetModuleHandleA, 0
+        mov     [hInstance], eax
+
+; initialize the WndClass structure
+        mov     [wc.clsStyle], CS_HREDRAW + CS_VREDRAW
+        mov     [wc.clsLpfnWndProc], offset DCDemoWndProc
+        mov     [wc.clsCbClsExtra], 0
+        mov     [wc.clsCbWndExtra], 0
+
+        mov     eax, [hInstance]
+        mov     [wc.clsHInstance], eax
+
+        call    LoadIconA, 0, IDI_APPLICATION
+        mov     [wc.clsHIcon], eax
+
+        call    LoadCursorA, 0 ,IDC_ARROW
+        mov     [wc.clsHCursor], eax
+
+        call    GetStockObject, WHITE_BRUSH
+        mov     [wc.clsHbrBackground], eax
+
+        mov     [wc.clsLpszMenuName], 0
+        mov     [wc.clsLpszClassName], offset szClassName
+
+        call    RegisterClassA, offset wc
+
+        call    CreateWindowExA, 0,offset szClassName,offset szTitleName, \
+                WS_OVERLAPPEDWINDOW,CW_USEDEFAULT, \
+                CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,0,0, \
+                [hInstance], 0
+
+        mov     [newhwnd], eax
+
+        call    ShowWindow, [newhwnd], SW_SHOWNORMAL
+        call    UpdateWindow, [newhwnd]
+
+msg_loop:
+        call    GetMessageA, offset msg, 0, 0, 0
+        .if     eax != 0
+                call    TranslateMessage, offset msg
+                call    DispatchMessageA, offset msg
+                jmp     msg_loop
+        .endif
+        call    ExitProcess, [msg.msWPARAM]
+
+
+;-----------------------------------------------------------------------------
+DCDemoWndProc    proc uses ebx edi esi, hwnd:DWORD, wmsg:DWORD,\
+                 wparam:DWORD, lparam:DWORD
+
+        cmp     [wmsg], WM_PAINT
+        je      wmpaint
+        cmp     [wmsg], WM_DESTROY
+        je      wmdestroy
+
+        call    DefWindowProcA, [hwnd],[wmsg],[wparam],[lparam]
+        jmp     finish
+
+wmpaint:
+;=================================================================
+
+        ; Получаем контекст устройства
+        call    BeginPaint, [hwnd], offset PaintStruct
+        mov     [hDC], eax
+
+        ; Загружаем bitmap, который будет отображаться в окне, из файла
+        call    LoadImageA, 0,offset szImg,IMAGE_BITMAP, \
+                0,0,LR_LOADFROMFILE
+        mov     [hBitmap], eax
+
+        ; Получаем размерность загруженного bitmap'а
+        call    GetObjectA, [hBitmap], size BITMAP, offset Bitmap
+
+
+        ; Создаем совместимый с контекстом окна контекст в памяти
+        call    CreateCompatibleDC, [hDC]
+        mov     [hCompatibleDC], eax
+
+        ; Делаем загруженный из файла bitmap текущим в совместимом контексте
+        call    SelectObject, [hCompatibleDC], [hBitmap]
+        mov     [hOldBitmap], eax
+
+        ; Определяем размер рабочей области окна
+        call    GetClientRect, [hwnd], offset Rect
+
+        ; Копируем bitmap с совместимого на основной контекст
+        ; с маштабированием
+        call    StretchBlt, [hDC],0,0,[Rect.rcRight],[Rect.rcBottom], \
+                [hCompatibleDC],0,0,[Bitmap.bmWidth],[Bitmap.bmHeight], \
+                SRCCOPY
+
+        ; Вновь делаем старый bitmap текущим
+        call    SelectObject, [hCompatibleDC], [hOldBitmap]
+
+        ; Удаляем загруженный с диска bitmap
+        call    DeleteObject, [hBitmap]
+
+        ; Удаляем совместимый контекст
+        call    DeleteDC, [hCompatibleDC]
+
+        ; Освобождаем основной контекст, завершая перерисовку
+        ; рабочей области окна
+        call    EndPaint, [hwnd], offset PaintStruct
+
+        mov     eax, 0
+        jmp     finish
+;=================================================================
+
+wmdestroy:
+        push    0
+        call    PostQuitMessage
+        mov     eax, 0
+finish:
+        ret
+DCDemoWndProc          endp
+ends
+end start
+</PRE>Возьмите файл <A 
+href="dcdemo.zip">dcdemo.zip</A> и 
+попробуйте запустить программу. Если все правильно, то bitmap точно впишется в 
+окно. Попробуйте поизменять размеры окна. Bitmap постоянно будет точно 
+вписываться в окно, при этом растягиваясь или сжимаясь. А теперь давайте 
+разберем эту программу и сопоставим операторы программы с шагами алгоритма 
+работы с контекстом в памяти, о котором я говорил ранее. 
+<P>В оконной функции, которая называется DCDemoWndProc, интерес для нас 
+представляет обработка сообщения WM_PAINT, которое мы и рассмотрим. Первый шаг 
+алгоритма - получить хэндл контекста устройства - мы выполняем посредством 
+вызова функции BeginPaint(hWnd, &amp;PaintStruc). Аргумент hWnd очевиден - мы 
+получаем контекст данного окна. Что же касается структуры PaintStruct... 
+<P>
+<CENTER>Вид окна, отображаемого программой:<BR><IMG alt="Окно DCDemo" height=275 
+src="18.files/dcdemo.gif" width=400> </CENTER>
+<P>Понятно, что окно далеко не всегда должно перерисоваться полностью. К 
+примеру, только часть окна перекрывается другим окном. Естественно, что и 
+перерисоваться должна только часть окна. В этом случае полная перерисовка всего 
+окна будет только лишней тратой времени и ресурсов компьютера. Windows "знает" о 
+том, какая часть окна перекрыта. При необходимости перерисовки (при вызове 
+BeginPaint()) система заполняет структуру типа PAINTSTRUCT, адрес которой 
+передается системе как второй аргумент BeginPaint(). Среди всех полей структуры 
+типа PAINTSTRUCT основным (на мой взгдяд) является поле, содержащее координаты 
+той области (clipping region), которая должна быть перерисована. В нашем примере 
+информация, хранящаяся в этой структуре, но я прощу читателя обратить внимание 
+на эту структуру и в дальнейшем использовать ее. Получив от функции BeginPaint() 
+хэндл контекста устройства (hDC), будем считать первых шаг выполненным. 
+<P>Второй шаг - получение хэндла bitmap'а, который будет отображаться в окне - 
+мы делаем, вызывая функцию LoadImage(). Я не случайно воспользовался именно этой 
+функцией. Во-первых, возможности этой функции достаточно широки. Она позволяет 
+загружать графические образы как из ресурсов, записанных в исполняемом файле, 
+так и из файлов, содержащих только изображения. Графическим образом может быть 
+bitmap, курсор и иконка. Кроме этого, функция позволяет управлять параметрами 
+отображения и загрузки образа. Во-вторых, подавляющее большинство функций 
+работают с ресурсами, сохраненными в исполняемом файле, и у программистов, 
+начинающих осваивать Win32, попытки загрузить что-либо из файла сопровождаются 
+некоторыми трудностями. 
+<P>В файле winuser.h эта функция описана следующим образом: <PRE>  WINUSERAPI HANDLE WINAPI LoadImageA(HINSTANCE,LPCSTR,UINT,int,int,UINT)
+</PRE>Первых, второй и последний аргументы этой функции работают в связке. 
+Первый аргумент(hInst) - хэндл программы. Как читатель должен помнить, если 
+вместо хэндла программы указан нуль, то объект является предопределенным, т.е. 
+хранится в "глубинах" системы. В противном случае, объект загружается откуда-то 
+снаружи. Второй аргумент - lpszName - определяет загружаемый объект. Последний 
+аргумент - fuLoad - содержит флаги, определяющие режим загрузки объекта. Среди 
+этих флагов есть флаг LR_LOADFROMFILE. Его название определяет его назначение - 
+если этот флаг установлен, загрузка происходит из внешнего файла. От значения 
+первого и последнего аргументов зависит, как будет интерпретирован второй 
+аргумент. Взаимодействие этих трех аргументов объясняется в таблице: 
+<CENTER>
+<H3>Взаимодействие аргументов функции LoadImage()</H3>
+<TABLE border=1 width="90%">
+  <TBODY>
+  <TR>
+    <TD align=middle bgColor=#000050 width="20%"><B>fuLoad(флаг 
+      LR_LOADFROMFILE)</B></TD>
+    <TD align=middle bgColor=#000050 width="10%"><B>hInst</B></TD>
+    <TD align=middle bgColor=#000050 width="50%"><B>lpszName</B></TD></TR>
+  <TR>
+    <TD>Не установлен</TD>
+    <TD align=middle>NULL</TD>
+    <TD>Идентификатор предопределенного объекта</TD></TR>
+  <TR>
+    <TD>Не установлен</TD>
+    <TD align=middle>не NULL</TD>
+    <TD>Имя ресурса</TD></TR>
+  <TR>
+    <TD>Установлен</TD>
+    <TD align=middle>NULL</TD>
+    <TD>Имя файла, в котором содержится bitmap</TD></TR>
+  <TR>
+    <TD>Установлен</TD>
+    <TD align=middle>не NULL</TD>
+    <TD>Имя файла, в котором содержится bitmap</TD></TR></TBODY></TABLE></CENTER>
+<P>Третий аргумент - тип образа, он может принимать значения IMAGE_BITMAP, 
+IMAGE_CURSOR, IMAGE_ICON и IMAGE_ENHMATEFILE. Здесь комметарии излишни. 
+Четвертый и пятый аргументы указывают ширину и высоту иконки или курсора и в 
+нашем примере не используются. 
+<P>Последний аргумент - флаги, определяющие параметры загрузки образа в память. 
+Их достаточно много, только в файле winuser.h я насчитал 12 возможных 
+идентификаторов. Все они начинаются с букв LR. Ничего сложного в них нет, и 
+читатель сам сможет изучить их. Краткое описание этих флагов приведено в 
+таблице: 
+<CENTER>
+<H3>Флаги, определяющие параметры загрузки образа в память</H3>
+<TABLE border=1 width="90%">
+  <TBODY>
+  <TR>
+    <TD align=middle bgColor=#000050 width="20%"><B>Флаг</B></TD>
+    <TD align=middle bgColor=#000050 width="10%"><B>Значение</B></TD>
+    <TD align=middle bgColor=#000050 width="50%"><B>Эффект</B></TD></TR>
+  <TR>
+    <TD>LR_DEFAULTCOLOR</TD>
+    <TD align=middle>0x0000</TD>
+    <TD>Указывает, что загружаемый образ - не монохромный</TD></TR>
+  <TR>
+    <TD>LR_MONOCHROME</TD>
+    <TD align=middle>0x0001</TD>
+    <TD>Указывает, что загружаемый образ - черно-белый</TD></TR>
+  <TR>
+    <TD>LR_COLOR</TD>
+    <TD align=middle>0x0002</TD>
+    <TD></TD></TR>
+  <TR>
+    <TD>LR_COPYRETURNORG</TD>
+    <TD align=middle>0x0004</TD>
+    <TD></TD></TR>
+  <TR>
+    <TD>LR_COPYDELETEORG</TD>
+    <TD align=middle>0x0008</TD>
+    <TD></TD></TR>
+  <TR>
+    <TD>LR_LOADFROMFILE</TD>
+    <TD align=middle>0x0010</TD>
+    <TD>Образ необходимо загружать из файла, а не из ресурсов</TD></TR>
+  <TR>
+    <TD>LR_LOADTRANSPARENT</TD>
+    <TD align=middle>0x0020</TD>
+    <TD>Все пиксели, цвет которых совпадает с цветом пикселя, расположенного в 
+      левом верхнем углу bitmap'а, отображаются как прозрачные</TD></TR>
+  <TR>
+    <TD>LR_DEFAULTSIZE</TD>
+    <TD align=middle>0x0040</TD>
+    <TD>Использовать ширину и высоту образа, определенные в системных метриках 
+      для иконки и курсора, если cxDesired или cyDesired равны 0. Если этот флаг 
+      не установлен, а cxDesired и/или cyDesired равны 0, используются размеры 
+      образа, указанные в ресурсе.</TD></TR>
+  <TR>
+    <TD>LR_LOADMAP3DCOLORS</TD>
+    <TD align=middle>0x1000</TD>
+    <TD>Заменить следующие оттенки серого цвета:<BR>RGB(128,128,128)(DkGray) - 
+      на COLOR_3DSHADOW,<BR>RGB(192,192,192)(Gray) - на 
+      COLOR_3DFACE,<BR>RGB(223,223,223)(LtGray) - на COLOR_3DLIGHT</TD></TR>
+  <TR>
+    <TD>LR_CREATEDIBSECTION</TD>
+    <TD align=middle>0x2000</TD>
+    <TD>При загрузке bitmap'a возвращает оригинальные значения цветов, не 
+      преобразуя bitmap в совместимый с данным контекстом</TD></TR>
+  <TR>
+    <TD>LR_COPYFROMRESOURCE<BR>LR_SHARED</TD>
+    <TD align=middle>0x8000</TD>
+    <TD>Разделять хэндл загруженного изображения, в случае, если образ 
+      загружается несколько раз. Нежелательно применять к образам нестандартных 
+      размеров</TD></TR></TBODY></TABLE></CENTER>
+<P>Функция LoadImage() возвращает нам хэндл загруженного bitmap'а (hBitmap) (или 
+NULL, если где-то что-то не так), после чего мы можем считать второй шаг нашего 
+алгоритма пройденным. 
+<P>Третий шаг - получение совместимого контекста в памяти - выполняется 
+посредством вызова функции CreateCompatibleDC(). Единственный аргумент этой 
+функции - хэндл контекста (hDC), для которого создается совместимый контекст. 
+<P>Четвертый шаг мы реализуем вызовом функции SelectObject(). Первым аргументом 
+указываем хэндл контекста, в котором замещается текущий элемент (в данном случае 
+это хендл только что созданного контекста в памяти hCompatibleDC), а вторым - 
+хэндл элемента, которым замещается текущий элемент (хэндл загруженного bitmap'а 
+hBitmap). Немаловажно, что эта функция возвращает хэндл ЗАМЕЩЕННОГО элемента 
+(hOldBitmap), т.е. впоследствии с этим элементом могут также производиться 
+манипуляции. 
+<P>А вот на пятом шаге происходит то, ради чего мы зыварили всю эту кашу с 
+загрузкой bitmap'ов, совместимыми контекстами и прочим. Для копирования bitmap'а 
+(с масштабированием) с одного контекста на другой, мы используем функцию 
+StretchBlt(), одну из "могучих blt", по меткому выражению Чарльза Петцольда. К 
+их числу, помимо StretchBlt(), относятся BiBlt() и PatBlt(). 
+<P>Наверное, StretchBlt() является самой "могучей" из них. И наверное, ее мощь и 
+обусловила наличие у этой функции "всего-навсего" одиннадцати аргументов. В 
+файле wingdi.h эта функция описана следующим образом: <PRE>  WINGDIAPI BOOL WINAPI StretchBlt(HDC,int,int,int,int,HDC,int,int,int,int,DWORD);
+</PRE>Первые пять аргументов описывают тот прямоугольник на экране, в который 
+будет вписан bitmap (на рисунке он обозначен зеленым цветом). Ту часть bitmap'а, 
+которая будет вписана в прямоугольник на экране (на рисунке - пересекающаяся 
+часть зеленого и синего прямоугольников), описывают следующие пять аргументов. И 
+последний, одиннадцатый аргумент, так называемый код растовой операции, 
+описывает, каким образом пиксели одного bitmap'а будут взаимодействовать с 
+пикселями другого bitmap'а. Для того чтобы лучше понять аргументы функции, 
+обратимся к рисунку. Представим, что в окне, в регионе, обозначенном на рисунке 
+зеленым цветом, нужно отобразить bitmap (обозначен на рисунке синим цветом) или 
+часть bitmap'а, при необходимости сжав или растянув ее. 
+<P>
+<CENTER><IMG alt="Взаимодействие аргументов функции&#10;StretchBlt" height=275 
+src="18.files/StretchBlt.gif" width=400><BR>Взаимодействие аргументов функции 
+StretchBlt</CENTER>
+<P>Итак, первый и шестой аргументы функции - хэндлы окна (hDC) и совместимого 
+контекста (hCompatibleDC) соответственно. Второй (nXOriginDest) и третий 
+(nYOriginDest) аргументы содержат смещение верхнего левого угла прямоугольника, 
+в который будет вписываться bitmap, относительно левой и верхней сторон рабочей 
+области окна (В каких единицах выражено смещение? Напомню, мы создали окно и не 
+меняли режим отображения, т.е. текущий режим является установленным по 
+умолчанию). Четвертый (nWidthDest) и пятый (nHeightDest) аргументы - ширина и 
+высота этого прямоугольника. Седьмой (nXOriginSrc) и восьмой (nYOriginSrc) 
+аргументы аналогичны второму и третьему аргументам. Девятый (nWidth) и десятый 
+(hHeightSrc) аргументы содержат ширину и высоту отображаемой части bitmap'а . Не 
+нужно обладать развитым пространственным воображением, чтобы понять, что, 
+изменяя положения прямоугольников друг относительно друга, а также относительно 
+окна, меняя их размеры, можно отобразить на экране любую часть или целый bitmap. 
+
+<P>В примере мы хотим фактически совместить наш bitmap с рабочей областью окна, 
+поэтому второй и третий аргументы вызываемой функции равны нулю. Четвертый и 
+пятый аргументы равны ширине и высоте рабочей области (мы получили ширину и 
+высоту рабочей области с помощью функции GetClientRect()). Седьмой и восьмой 
+аргументы равны нулю (подумайте, почему?), а десятый содержат ширину и высоту 
+bitmap'а, которые мы получили, обратившись к GetObject(). Вот, кажется, и все. 
+Нет, не все. 
+<P>Как работает одиннадцатый аргумент, определяющий взаимодействие двух 
+bitmap'ов? Давайте закончим обсуждение нашего алгоритма, а затем вернемся к 
+этому вопросу. 
+<P>Мы прошли уже пять шагов алгоритма. Остались еще три шага - удаление 
+совместимого контекста, объекта и контекста устройства - пусть читатель сам 
+определит, какие операторы программы их реализуют. 
+<P>Неужели мы добрались до конца нашего алгоритма? Мне он показался бесконечным! 
+Давайте прежде чем рассматривать одиннадцатый аргумент упомянем об оставшихся 
+"могучих Blt". 
+<P>Функция BitBlt() тоже копирует bitmap с одного контекста на другой, но без 
+масштабирования. Следовательно, ей не нужны девятый и десятый аргументы - ширина 
+и высота отображаемой области - отображается все то, что поместится в отведенную 
+для этого область (зеленый прямоугольник на рисунке). 
+<P>Последняя из "могучих" - функция PatBlt - просто закрашивает прямоугольник на 
+экране, используя для этого выбранную в контексте устройства кисть. Раз нет 
+отображаемого объекта, то зачем нам его контекст и координаты? Отбрасываем 
+аргументы с шестого по десятый включительно и получаем список аргументов 
+PatBlt(). 
+<P>Наконец мы подошли к тому, чтобы уяснить, что же представляет собой 
+одиннадцатый аргумент функции StretchBlt(). Сейчас мы поговорим о том, что же 
+такое. 
+<p><div align="center"><a href="2.html">	<img src="../../back.gif" width=66 height=29 border=0 alt=""></a></div></p></BODY></HTML>

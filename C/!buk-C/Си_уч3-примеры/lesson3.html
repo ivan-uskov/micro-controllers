@@ -1,0 +1,113 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Урок 3&nbsp; Операторы сравнения</title>
+</head>
+
+<body background="../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Пример 3 </font></b></div></p>
+
+<p align="left">&nbsp;&nbsp;&nbsp;<font> Операторы сравнения, равенства и логические. В С++ имеется логический тип данных
+<i> bool</i> который может принимать только два значения
+<i>true</i>(истина) или <i>false</i>(ложь). Этот тип данных используется для контроля выполнения инструкций различных типов. В следующей таблице представлены инструкции С++, наиболее часто используемые для управления логикой выполнения.<br>
+</font></p>
+<div align="left">
+  <table border="1" width="77%">
+    <tr>
+      <td width="100%" colspan="3">
+        <p align="center">Операторы сравнения,
+        равенства и логические</td>
+    </tr>
+    <tr>
+      <td width="39%" rowspan="4" align="center">Операторы
+        сравнения</td>
+      <td width="47%" align="center">меньше</td>
+      <td width="14%" align="center">&lt;</td>
+    </tr>
+    <tr>
+      <td width="47%" align="center">больше</td>
+      <td width="14%" align="center">&gt;</td>
+    </tr>
+    <tr>
+      <td width="47%" align="center">меньше или равно</td>
+      <td width="14%" align="center">&lt;=</td>
+    </tr>
+    <tr>
+      <td width="47%" align="center">больше или равно</td>
+      <td width="14%" align="center">&gt;=</td>
+    </tr>
+    <tr>
+      <td width="39%" align="center" rowspan="2">Операторы
+        равенства</td>
+      <td width="47%" align="center">равно</td>
+      <td width="14%" align="center">==</td>
+    </tr>
+    <tr>
+      <td width="47%" align="center">не равно</td>
+      <td width="14%" align="center">!=</td>
+    </tr>
+    <tr>
+      <td width="39%" align="center" rowspan="3">Логические
+        операторы</td>
+      <td width="47%" align="center">отрицание</td>
+      <td width="14%" align="center">!</td>
+    </tr>
+    <tr>
+      <td width="47%" align="center">логическое и</td>
+      <td width="14%" align="center">&amp;&amp;</td>
+    </tr>
+    <tr>
+      <td width="47%" align="center">логическое или</td>
+      <td width="14%" align="center">||</td>
+    </tr>
+  </table>
+</div>
+
+<p align="left"><font> 
+Очень важно не путать операторы равенства и присваивания, например
+<i> a==b</i> - это проверка на равенство т. е. если <i> a</i> и
+<i> b</i> равны то выражение вернет <i>true</i>(истина) в противном случае
+<i>false</i>(ложь), а в выражении <i> a=b</i> переменная
+<i> a</i> станет равна <i>b</i>. Приведем пример с инструкцией
+<i>if</i>, она имеет вид:</font></p>
+<p><i><font face="Courier New" color="#0000FF">if(условие)<br>
+{<br>
+&nbsp;&nbsp;&nbsp; инструкции<br>
+}</font></i></p>
+
+
+
+<p><font>Здесь если условие истинно то выполняются инструкции. Мы можем составить следующую программу:</font></p>
+
+
+
+<p><font face="Courier New" color="#0000FF"><i>int main()<br>
+{<br>
+int a = 0;&nbsp;<br>
+int b = 4;<br>
+<br>
+if(a != b) //если a не равно b, то<br>
+{<br>
+a = b; //a становится равной b<br>
+}<br>
+<br>
+if(a == b) //если a равно b, то<br>
+{<br>
+a = b + 1; //a принимает значение b + 1<br>
+}<br>
+return 0;<br>
+}</i></font></p>
+
+<A href="Examples/l3_var1.rar">Текст программы</a>
+
+<hr>
+<p align="center"><a href="lesson2.html"><font color="#000000">предыдущий
+пример</font></a><font color="#000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="lesson4.html">следующий пример</a></font></p>
+<p><div align="center"><a href="index.html">	<img src="../soder.gif" width=120 height=31 border=0 alt=""></a></div></p>
+</body>
+
+</html>

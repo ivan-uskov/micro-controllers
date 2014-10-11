@@ -1,0 +1,84 @@
+<html>
+<head>
+<title>Несколько Слов О Заполнении Объектов</title>
+</head>
+<BODY background="../../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Несколько слов о заполнении объектов </font></b></div></p>
+
+
+<p>
+Как читатель уже знает, заполнение замкнутых графических объектов происходит с помощью текущей
+кисти. Программист может использовать предопределенную кисть, а может создать свою собственную,
+после чего сделать ее текущей с помощью функции SelectObject().
+<p>
+Простейшим видом кисти является так называемая сплошная кисть, которая создается с помощью функции
+CreateSolidBrush():
+<pre>
+  WINGDIAPI HBRUSH  WINAPI CreateSolidBrush(COLORREF);
+</pre>
+Единственный аргумент этой функции - цвет кисти (может, лучше сказать не кисти, а краски?).
+<p>
+Штриховая кисть создается с помощью функции CreateHatchBrush():
+<pre>
+  WINGDIAPI HBRUSH  WINAPI CreateHatchBrush(int, COLORREF);
+</pre>
+Первый аргумент этой функции - стиль штриховки. Возможные стили приведены в таблице.
+
+<center>
+<h3>Стили штриховки</h3>
+<table width=90% border=1><tr>
+<td align=center width=25% bgcolor=#000050><b>Стиль штриховки</b></td>
+<td align=center width=15% bgcolor=#000050><b>Значение</b></td>
+<td align=center width=15% bgcolor=#000050><b>Описание</b></td>
+<td align=center width=35% bgcolor=#000050><b>Эффект</b></td>
+</tr><tr>
+<td>HS_HORIZONTAL</td>
+<td align=center>0</td>
+<td align=center>----</td>
+<td>Горизонтальная штриховка</td>
+</tr><tr>
+
+<td>HS_VERTICAL</td>
+<td align=center>1</td>
+<td align=center>|||||</td>
+<td>Вертикальная штриховка</td>
+</tr><tr>
+
+<td>HS_FDIAGONAL</td>
+<td align=center>2</td>
+<td align=center>\\\\\</td>
+<td>Наклонная слева направо штриховка</td>
+</tr><tr>
+
+<td>HS_BDIAGONAL</td>
+<td align=center>3</td>
+<td align=center>/////</td>
+<td>Наклонная справа налево штриховка</td>
+</tr><tr>
+
+<td>HS_CROSS</td>
+<td align=center>4</td>
+<td align=center>+++++</td>
+<td>Штриховка крестиком</td>
+</tr><tr>
+
+<td>HS_DIAGCROSS</td>
+<td align=center>5</td>
+<td align=center>xxxxx</td>
+<td>Штриховка косым крестиком</td>
+</tr></table></center>
+<p>
+Второй аргумент указывает цвет штриховки.
+<p>
+И наконец, с помощью функции CreatePatternBrush() мы можем создать кисть, которая при заполнении
+будет использовать bitmap. В wingdi.h она описана следующим образом:
+<pre>
+  WINGDIAPI HBRUSH WINAPI CreatePatternBrush(HBITMAP);
+</pre>
+Уже по типу аргумента видно, что единственным аргументом этой функции является хэндл bitmap'а.
+<p>
+Эти три функции при успешном завершении возвращают хэндл созданной кисти. В том случае, если
+произошла какая-то ошибка, возвращаемое значение равно NULL.
+<p><div align="center"><a href="gr.html">	<img src="../../back.gif" width=66 height=29 border=0 alt=""></a></div></p>
+</body>
+</html>

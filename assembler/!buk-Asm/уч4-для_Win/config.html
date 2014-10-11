@@ -1,0 +1,59 @@
+<html>
+<head>
+<title>Настройка Windows для программирования на ассемблере</title>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+</head>
+<BODY background="../../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Настройка Windows 
+    для программирования на ассемблере </font></b></div></p>
+<div align="center"> 
+
+
+  <p align="left"><font>После долгого изучения 
+    особенностей программирования на ассемблере для Windows, я пришел к выводу, 
+    что все-таки это сложно и неудобно если начинать с нуля. Однако быстро и практично, 
+    когда у программиста есть свои заготовки. В этой статье я расскажу о заготовках 
+    которые использую сам и которые, на мой взгляд, очень удобны.</font></p>
+  <p align="left"><font>1. Ассоциация файлов 
+    &quot;.ASM&quot; c Notepad.</font></p>
+  <p align="left"><font>Вы скажете, что это 
+    можно запросто сделать и через Explorer. Я отвечу - да, однако удобнее иметь 
+    у себя &quot;.reg&quot; файл, который можно в любой момент запустить и получить 
+    эту возможность.</font></p>
+  <p align="left"><font color=green>REGEDIT4<br>
+    [HKEY_CLASSES_ROOT\.asm]<br>
+    &quot;Content Type&quot;=&quot;text/plain&quot;<br>
+    @=&quot;txtfile&quot;<br>
+    [HKEY_CLASSES_ROOT\.asm\ShellNew]<br>
+    &quot;NullFile&quot;=&quot;&quot;</font><font><br>
+    <br>
+    HKEY_CLASSES_ROOT содержит в себе всю информацию о типах файлов и программах, 
+    ассоциированных с ними. А тип &quot;txtfile&quot; ассоциирован с Notepad.exe 
+    (посмотрите HKEY_CLASSES_ROOT\txtfile].</font></p>
+  <p align="left"><font>2. Создание пункта 
+    меню &quot;Новый ASM файл&quot;.</font></p>
+  <p align="left"><font>На мой взгляд, очень 
+    удобно нажать правую кнопку мыши на рабочем столе и выбрать в меню &quot;New...&quot; 
+    пункт &quot;Новый ASM файл&quot;. К тому же здесь можно настроить шаблон на 
+    все создаваемые файлы. Создайте этот .reg файл и попробуйте.</font></p>
+  <p align="left"><font color=green>REGEDIT4<br>
+    [HKEY_CLASSES_ROOT\asmfile]<br>
+    @=&quot;Программа на ассемблере&quot;<br>
+    [HKEY_CLASSES_ROOT\asmfile\DefaultIcon]<br>
+    @=&quot;C:\\WINDOWS\\SYSTEM\\shell32.dll,-152&quot;<br>
+    [HKEY_CLASSES_ROOT\asmfile\shell]<br>
+    [HKEY_CLASSES_ROOT\asmfile\shell\open]<br>
+    [HKEY_CLASSES_ROOT\asmfile\shell\open\command]<br>
+    @=&quot;C:\\WINDOWS\\NOTEPAD.EXE %1&quot;<br>
+    [HKEY_CLASSES_ROOT\asmfile\shell\print]<br>
+    [HKEY_CLASSES_ROOT\asmfile\shell\print\command]<br>
+    @=&quot;C:\\WINDOWS\\NOTEPAD.EXE /p %1&quot;<br>
+    [HKEY_CLASSES_ROOT\.asm]<br>
+    &quot;Content Type&quot;=&quot;text/plain&quot;<br>
+    @=&quot;asmfile&quot;<br>
+    [HKEY_CLASSES_ROOT\.asm\ShellNew]<br>
+    &quot;NullFile&quot;=&quot;asm.asm&quot;</font><font><br>
+    </font></p>
+  <p><div align="center"><a href="index.htm">	<img src="../../soder.gif" width=120 height=31 border=0 alt=""></a></div></p>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<HTML>
+<HEAD>
+
+<title></title>
+</HEAD>
+<body background="../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial"> </font></b></div></p>
+<H2 ALIGN="CENTER"><SPAN lang=RU style=" LEFT: 10px; TOP: 15px; mso-ansi-language: RU"><FONT FACE="Times New Roman">Пример 11&nbsp;&nbsp;</FONT></SPAN></H2>
+<FONT FACE="Times New Roman">
+  <SPAN lang=RU style=" LEFT: 10px; TOP: 15px; mso-ansi-language: RU">Стек - одна из полезных структур данных. Для стека&nbsp;характерны такие операции как вставлять и удалять данные, но выпалняются&nbsp;они только над самым верхним элементом(вершиной стека). Такой порядок называется "первым вошел, последним вышел".<BR>
+&nbsp;&nbsp; Реалезуем стек для хранения символьных значений(букв), с помощью структуры и нескольких функций. Для хранения данных мы создадим структуру stak состоящую из массива s, хранящего наши данные, и переменной top которая будет хранить номер верхнего элемента.</SPAN></FONT><SPAN lang=RU style="mso-ansi-language: RU"><FONT FACE="Courier New" COLOR="#0000ff"><P>struct stack<BR>
+{<BR>
+&nbsp; char s[1000];<BR>
+&nbsp; int top;<BR>
+};</P>
+<P>&nbsp; </FONT><FONT>Теперь создадим функцию reset&nbsp;задача которой&nbsp;инициализация. В ней нам достачно переменной top&nbsp;присвоить значение -1. В качестве параметра ей будет передоватся указатель на структуру (при использовании указателя для доступа к членам структуры используется не ".", а оператор "</FONT><FONT FACE="Courier New">-&gt;</FONT><FONT>"). </P>
+</FONT><FONT FACE="Courier New" COLOR="#0000ff"><P>void reset(stack* st)<BR>
+{<BR>
+&nbsp; st-&gt;top = -1;<BR>
+}</P>
+<P>&nbsp; </FONT><FONT>Так же нам нужны функции push(вставить) и pop(извлечь).</P>
+</FONT><FONT FACE="Courier New" COLOR="#0000ff"><P><BR>
+void push(stack* st, char s)<BR>
+{<BR>
+&nbsp; ++st-&gt;top;<BR>
+&nbsp; st-&gt;s[st-&gt;top] = s;<BR>
+}<BR>
+char pop(stack* st)<BR>
+{<BR>
+&nbsp; --st-&gt;top;<BR>
+&nbsp; return st-&gt;s[st-&gt;top];<BR>
+}</P>
+<P>&nbsp; </FONT><FONT>Теперь напишем функцию main, чтобы проверить нашу версию стека, функция будет печатать строку в обратном порядке.</P>
+</FONT><FONT FACE="Courier New" COLOR="#0000ff"><P><BR>
+main()<BR>
+{<BR>
+&nbsp; char str[] = "My name is Gena";<BR>
+&nbsp; int count = sizeof(str);<BR>
+&nbsp; stack My_stack;<BR>
+&nbsp; reset(&amp;My_stack);<BR>
+&nbsp; for(int i = 0; i &lt; count; i++)<BR>
+&nbsp; {<BR>
+&nbsp;&nbsp;&nbsp; push(&amp;My_stack, str[i]);<BR>
+&nbsp; }<BR>
+&nbsp; while(My_stack.top != -1)<BR>
+&nbsp; {<BR>
+&nbsp;&nbsp;&nbsp; cout &lt;&lt; pop(&amp;My_stack);<BR>
+&nbsp; }<BR>
+&nbsp; cout &lt;&lt; endl;<BR>
+}</P>
+<P>&nbsp; </FONT><FONT>Полностью текст программы должен выглядеть так:</P>
+</SPAN>
+</FONT><FONT FACE="Courier New" COLOR="#0000ff"><P>#include &lt;iostream.h&gt;</FONT> </P>
+<FONT FACE="Courier New" COLOR="#0000ff"><P>struct stack<BR>
+{<BR>
+&nbsp; char s[1000];<BR>
+&nbsp; int top;<BR>
+};</FONT> </P>
+<FONT FACE="Courier New" COLOR="#0000ff"><P>void reset(stack* st)<BR>
+{<BR>
+&nbsp; st-&gt;top = -1;<BR>
+}</FONT> </P>
+<FONT FACE="Courier New" COLOR="#0000ff"><P>void push(stack* st, char s)<BR>
+{<BR>
+&nbsp; ++st-&gt;top;<BR>
+&nbsp; st-&gt;s[st-&gt;top] = s;<BR>
+}</FONT> </P>
+<FONT FACE="Courier New" COLOR="#0000ff"><P>char pop(stack* st)<BR>
+{<BR>
+&nbsp; --st-&gt;top;<BR>
+&nbsp; return st-&gt;s[st-&gt;top];<BR>
+}</FONT> </P>
+<FONT FACE="Courier New" COLOR="#0000ff"><P>main()<BR>
+{<BR>
+&nbsp; char str[] = "My name is Gena";<BR>
+&nbsp; int count = sizeof(str);<BR>
+&nbsp; stack My_stack;<BR>
+&nbsp; reset(&amp;My_stack);<BR>
+&nbsp; for(int i = 0; i &lt; count; i++)<BR>
+&nbsp; {<BR>
+&nbsp;&nbsp;&nbsp;&nbsp; push(&amp;My_stack, str[i]);<BR>
+&nbsp; }<BR>
+&nbsp;&nbsp;&nbsp;&nbsp; while(My_stack.top != -1)<BR>
+&nbsp; {<BR>
+&nbsp;&nbsp;&nbsp;&nbsp; cout &lt;&lt; pop(&amp;My_stack);<BR>
+&nbsp; }<BR>
+&nbsp; cout &lt;&lt; endl;<BR>
+}</P>
+
+<A href="Examples/l11_var1.rar">Текст программы</a><br>
+<A href="Examples/l11_var1.exe">Запустить пример</a>
+
+<hr>
+</FONT>
+<p align="center"><a href="lesson10.html"><font color="#000000">предыдущий
+пример</font></a><font color="#000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="lesson12.html">следующий пример</a></font></p>
+<p><div align="center"><a href="index.html">	<img src="../soder.gif" width=120 height=31 border=0 alt=""></a></div></p>
+</BODY>
+</HTML>

@@ -1,0 +1,30 @@
+<HTML>
+<HEAD>
+<TITLE>Структура</TITLE>
+</HEAD>
+<BODY background="../../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Основная структура Win32 программы: </font></b></div></p>
+
+<pre class=dtext2>
+  .386
+  .model flat
+  .data
+    ;&lt;initialized data&gt;
+  .data?
+    ;&lt;uninitialized data&gt;
+  .code
+  &lt;label&gt;:
+    ;&lt;code&gt;
+  end &lt;label&gt;
+</pre>
+<P>
+.386 означает, что набор инструкций для 80386 процессора,
+можно использовать и выше(.486 .586).<BR>
+Модель памяти используется только FLAT.<P>
+<!--Sitek Banner Exchange System code start-->
+<center>
+
+<p><div align="center"><a href="index.htm">	<img src="../../soder.gif" width=120 height=31 border=0 alt=""></a></div></p>
+
+</BODY>
+</HTML>

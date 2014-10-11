@@ -1,0 +1,75 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Урок 8</title>
+</head>
+
+<body background="../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Пример 8 </font></b></div></p>
+
+<p><font>&nbsp;&nbsp;&nbsp; Всякую задачу можно разбить на несколько подзадач. Также и в программе мы можем использовать функции для разбиения ее на несколько подпрограмм. Выполнение программы начинается всегда с функции main(). Когда в программе вмтречается имя функции происходит обращение к ней и управление передается ей. После выполнения функции управление передается в то место откуда она была вызвана. Формально функция выглядет так: </font></p>
+<p><font><br>
+</font><font color="#0000FF" face="Courier New">тип имя(список_параметров)<br>
+{<br>
+&nbsp;&nbsp;&nbsp; инструкции<br>
+}</font></p>
+<p><font><br>
+ Тут: </font><font color="#0000FF" face="Courier New"> тип</font><font> – это возвращаемый тип(тип того что возвращает функция),
+</font><font color="#0000FF" face="Courier New"> имя</font><font> – это название функции и
+</font><font color="#0000FF" face="Courier New"> список_параметров</font><font> – это параметры которые передаются функции. В функциях для возврата результата используется инструкция return, она возвращает какое либо значение в то место откуда была вызвана функция. Приведем пример программы с использованием функции,
+которая будет высчитывать сумму двух
+введенных пользователем значений: </font></p>
+<p><font color="#0000FF" face="Courier New">#include &lt;iostream.h&gt;<br>
+int sum(int a, int b)<br>
+{<br>
+&nbsp;&nbsp;&nbsp; int c = a + b; return c;<br>
+}<br>
+main()<br>
+{<br>
+&nbsp;&nbsp;&nbsp; int a, b , res;<br>
+&nbsp;&nbsp;&nbsp; cout &lt;&lt; "a = ";<br>
+&nbsp;&nbsp;&nbsp; cin >> a;<br>
+&nbsp;&nbsp;&nbsp; cout &lt;&lt; "b = ";&nbsp;<br>
+&nbsp;&nbsp;&nbsp; cin >> b;&nbsp;<br>
+&nbsp;&nbsp;&nbsp; res = sum(a, b);<br>
+&nbsp;&nbsp;&nbsp; cout &lt;&lt; "summa: " &lt;&lt; res &lt;&lt; endl;<br>
+}</font></p>
+
+<A href="Examples/l8_var1.rar">Текст программы</a><br>
+<A href="Examples/l8_var1.exe">Запустить пример</a>
+
+<p><font>&nbsp;&nbsp;&nbsp; Объявление функции можно отделить от определения, например в данной программе функцию
+</font><font color="#0000FF" face="Courier New"> sum</font><font> можно объявить до функции
+</font><font color="#0000FF" face="Courier New"> main</font><font> а определить после:</font></p>
+<p><font face="Courier New" color="#0000FF">#include &lt;iostream.h> <br>
+int sum(int a, int b);<br>
+main()<br>
+{<br>
+&nbsp;&nbsp;&nbsp; int a, b , res;<br>
+&nbsp;&nbsp;&nbsp; cout &lt;&lt; "a = ";&nbsp;<br>
+&nbsp;&nbsp;&nbsp; cin >> a;<br>
+&nbsp;&nbsp;&nbsp; cout &lt;&lt; "b = "; <br>
+&nbsp;&nbsp;&nbsp; cin >> b;<br>
+&nbsp;&nbsp;&nbsp; res = sum(a, b);<br>
+&nbsp;&nbsp;&nbsp; cout &lt;&lt; "summa: " &lt;&lt; res &lt;&lt; endl;<br>
+}<br>
+int sum(int a, int b)<br>
+{<br>
+&nbsp;&nbsp;&nbsp; int c = a + b;&nbsp;<br>
+&nbsp;&nbsp;&nbsp; return c;<br>
+}</font></p>
+
+<A href="Examples/l8_var2.rar">Текст программы</a><br>
+<A href="Examples/l8_var2.exe">Запустить пример</a>
+
+<hr>
+<p align="center"><a href="lesson7.html"><font color="#000000">предыдущий
+пример</font></a><font color="#000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="lesson9.html">следующий пример</a></font></p>
+<p><div align="center"><a href="index.html">	<img src="../soder.gif" width=120 height=31 border=0 alt=""></a></div></p>
+</body>
+
+</html>

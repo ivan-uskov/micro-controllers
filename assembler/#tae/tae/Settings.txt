@@ -1,0 +1,3 @@
+C:\!!arh\#tae\tasm\tasm.exe
+C:\!!arh\#tae\tasm\tlink.exe
+C:\!!arh\#tae\tasm\td.exe

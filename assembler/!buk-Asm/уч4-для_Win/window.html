@@ -1,0 +1,638 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0051)http://home.od.ua/~blackw/WinAsm/Window/window.html -->
+<HTML><HEAD><TITLE>Первое окно</TITLE>
+</HEAD>
+<BODY background="../../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Первое окно </font></b></div></p>
+
+<P align=left><FONT size=3>Теперь, когда вы 
+уже не сомневаетесь в своих силах мы приступим к более сложной задаче - создании 
+окна.</FONT></P>
+<P align=left><FONT size=3>Создание окна, 
+обработка событий и реакция на события - вот три основных вопроса, которые мы 
+рассмотрим в этой статье. В дальнейшем мы всегда будем ссылаться на эту статью, 
+ибо она описывает ту основу, на которой держится все система GUI Windows. 
+Постарайтесь понять эту статью и если это у вас получиться, то я думаю, что 
+дальше ничего сложного для вас не будет.</FONT></P>
+<P align=left><FONT>Всем известно, что 
+каждое приложение для Windows начинается с WinMain. Через параметры, переданные 
+этой функции можно было получить командную строку, идентификатор предыдущего 
+экземпляра программы и так далее и тому подобнее. Немного сложнее процедура 
+инициализации приложения происходит в Assembler.</FONT></P>
+<P align=left><FONT>Первым шагом в 
+инициализации приложения под Windows будем считать вызов функции 
+<STRONG>INITTASK. </STRONG>После выполнения эта функция возвращает:</FONT></P>
+<UL>
+  <LI>
+  <P align=left><FONT color=#ff3333>При 
+  успешном завершении AX=1</FONT></P>
+  <LI>
+  <P align=left><FONT color=#ff3333>DX 
+  содержит <STRONG>nCmdShow</STRONG>, то есть параметр, указывающий на стиль 
+  просмотра окна</FONT></P>
+  <LI>
+  <P align=left><FONT color=#ff3333>ES:BX 
+  содержит адрес командной строки</FONT></P>
+  <LI>
+  <P align=left><FONT color=#ff3333>SI 
+  содержит идентификатор ранее загруженной программы 
+  <STRONG>hPrevInstance</STRONG></FONT></P>
+  <LI>
+  <P align=left><FONT color=#ff3333>DI 
+  содержит идентификатор загруженной программы 
+  <STRONG>hInstance</STRONG></FONT></P></LI></UL>
+<P align=left><FONT>После обработки входных 
+параметров нужно инициализировать приложение, используя функцию <STRONG>INITAPP. 
+</STRONG>Единственным параметром этой функции служит идентификатор приложения 
+hInstance<STRONG>.</STRONG>Функция <STRONG>INITAPP</STRONG> возвращает в AX=1, 
+если приложение успешно проинициализировано. </FONT></P>
+<P align=left><FONT>Теперь, когда все 
+сложности по инициализации закончились, мы наконец-то сможем создать наше первое 
+окно на Assembler.</FONT></P>
+<P align=left><FONT size=3>Процесс создания 
+окна можно разделить на несколько этапов :</FONT></P>
+<UL>
+  <LI>
+  <P align=left><FONT color=#ff3333 
+  size=3>Заполнение структуры <STRONG>WNDCLASS</STRONG>.</FONT></P>
+  <LI>
+  <P align=left><FONT color=#ff3333 
+  size=3>Регистрация класса окна с помощью функции 
+  <STRONG>RegisterClass</STRONG>.</FONT></P>
+  <LI>
+  <P align=left><FONT color=#ff3333 
+  size=3>Создание окна с помощью функции 
+  <STRONG>CreateWindow</STRONG>.</FONT></P>
+  <LI>
+  <P align=left><FONT color=#ff3333 
+  size=3>Вывод окна на экран, используя функцию 
+  <STRONG>ShowWindow</STRONG>.</FONT></P>
+  <LI>
+  <P align=left><FONT color=#ff3333 
+  size=3>Обновление окна с помощью функции 
+  <STRONG>UpdateWindow</STRONG>.</FONT></P></LI></UL>
+<P align=left><FONT size=3>Рассмотрим эти 
+этапы подробнее.</FONT></P>
+<P align=left><FONT size=3>Структура 
+<STRONG><FONT color=#ff3333>WNDCLASS</FONT></STRONG> является одним из кирпичей 
+фундамента, на котором построена Windows. В этой структуре содержится вся 
+информация о создаваемом окне. Описание этой структуры находится в файле 
+WINDOWS.INC.</FONT></P>
+<P align=left><FONT size=3>Структура 
+<STRONG><FONT color=#ff3333>WNDCLASS</FONT></STRONG></FONT></P>
+<UL>
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>clsStyleclsLpfnWndProc</FONT></STRONG> : DWORD</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>clsCbClsExtra</FONT></STRONG> : WORD</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>clsCbWndExtra</FONT></STRONG> : WORD</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>clsHInstance</FONT></STRONG> : WORD</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>clsHIcon</FONT></STRONG> : WORD</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>clsHCursor</FONT></STRONG> : WORD</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>clsHbrBackground</FONT></STRONG> : WORD</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>clsLpszMenuName</FONT></STRONG> : DWORD</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>clsLpszClassName</FONT></STRONG> : DWORD</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>clsStyle</FONT></STRONG> : WORD</FONT> </LI></UL>
+<P><FONT>Элемент <STRONG><FONT 
+color=#ff3333>clsStyleclsLpfnWndProc</FONT> </STRONG>определяет адрес функции 
+окна, которая обрабатывает сообщения для окон данного класса.</FONT></P>
+<P><FONT>Элемент <STRONG><FONT 
+color=#ff3333>clsCbClsExtra</FONT></STRONG> задает число байт, которое 
+необходимо дополнительно запросить у Windows под эту структуру, для хранения 
+собственных данных, присоединенных классу.</FONT></P>
+<P><FONT>Элемент <STRONG><FONT 
+color=#ff3333>clsCbWndExtra</FONT></STRONG> задает число байт, которое 
+необходимо дополнительно запросить у Windows для размещения всех структур, 
+создаваемых совместно с данным классом, для хранения собственных данных, 
+присоединенных к окну.</FONT></P>
+<P><FONT>Элемент <STRONG><FONT 
+color=#ff3333>clsHInstance</FONT></STRONG> сообщает Windows о том, кто создает 
+определение класса. Когда завершается последний экземпляр программы, Windows 
+удаляет все связанные с ним определения классов.</FONT></P>
+<P><FONT>Элемент <STRONG><FONT 
+color=#ff3333>clsHIcon</FONT></STRONG> определяет пиктограмму, которая будет 
+использоваться для изображения приложения, например на панели задач. Вы можете 
+создать пиктограмму сами(*) или воспользоваться одной из 
+определенных:</FONT></P>
+<UL>
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>IDI_APPLICATION</FONT></STRONG> - стандартная пиктограмма для 
+  приложения</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>IDI_HAND</FONT></STRONG> - "стоп"</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>IDI_QUESTION</FONT></STRONG> - "вопросительный знак"</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>IDI_EXCLAMATION</FONT></STRONG> - "восклицательный знак"</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>IDI_ASTERISK</FONT></STRONG> - "информация"</FONT> </LI></UL>
+<P><FONT>Элемент 
+<STRONG>clsHCursor</STRONG> идентифицирует курсор мыши, используемый в данном 
+окне по умолчанию. Если вы не хотите создавать свой курсор(*), то можно 
+воспользоваться одним, из представляемых Windows:</FONT></P>
+<UL>
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>IDC_ARROW</FONT></STRONG> - стрелка</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>IDC_IBEAM</STRONG></FONT><FONT 
+ > - вертикальная черта</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>IDC_WAIT</FONT></STRONG> - "песочные часы"</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>IDC_CROSS</STRONG></FONT><FONT 
+ > - крестик</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>IDC_UPARROW</STRONG></FONT><FONT 
+ > - вертикальная черта</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>IDC_SIZE</STRONG></FONT><FONT 
+ > - четыре стрелки, указывающие в разные 
+  стороны</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>IDC_ICON</STRONG></FONT><FONT 
+ > - курсор, используемый при 
+  drag&amp;drop.</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>IDC_SIZENWSE</STRONG></FONT><FONT 
+ > - двунаправленная стрелка 
+  "северо-запад/юго-восток"</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>IDC_SIZENESW</STRONG></FONT><FONT 
+ > - двунаправленная стрелка 
+  "северо-восток/юго-запад"</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>IDC_SIZEWE</STRONG></FONT><FONT 
+ > - двунаправленная стрелка 
+  "восток-запад"</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>IDC_SIZENS</STRONG></FONT><FONT 
+ > - двунаправленная стрелка 
+  "север-юг"</FONT> </LI></UL>
+<P><FONT>Элемент <STRONG><FONT 
+color=#ff3333>clsHbrBackground</FONT></STRONG> задает цвет фона для окна. Для 
+его определения можно воспользоваться любой из 20 системных констант цвета 
+:</FONT></P>
+<UL>
+  <LI><FONT color=#ff3333 
+ ><STRONG>COLOR_SCROLLBAR</STRONG></FONT><FONT 
+ > - цвет полосы прокрутки</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>COLOR_BACKGROUND</STRONG></FONT><FONT 
+ > - цвет фона окна</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>COLOR_ACTIVECAPTION</STRONG></FONT><FONT 
+ > - цвет заголовка активного окна</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>COLOR_INACTIVECAPTION</STRONG></FONT><FONT 
+ > - цвет заголовка неактивного окна</FONT> 
+
+  <LI><FONT color=#ff3333 
+ ><STRONG>COLOR_MENU</STRONG></FONT><FONT 
+ > - цвет меню</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>COLOR_WINDOW</STRONG></FONT><FONT 
+ > - цвет окна</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>COLOR_WINDOWFRAME</STRONG></FONT><FONT 
+ > - цвет обрамления окна</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>COLOR_MENUTEXT</STRONG></FONT><FONT 
+ > - цвет текста меню</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>COLOR_WINDOWTEXT</STRONG></FONT><FONT 
+ > - цвет текста окна</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>COLOR_CAPTIONTEXT</STRONG></FONT><FONT 
+ > - цвет текста в заголовке окна</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>COLOR_ACTIVEBORDER</STRONG></FONT><FONT 
+ > - цвет активной границы окна</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>COLOR_INACTIVEBORDER</STRONG></FONT><FONT 
+ > - цвет неактивной границы окна</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>COLOR_APPWORKSPACE</STRONG></FONT><FONT 
+ > - цвет рабочего места окна</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>COLOR_HIGHLIGHT</STRONG></FONT><FONT 
+ > - цвет подсветки</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>COLOR_HIGHLIGHTTEXT</STRONG></FONT><FONT 
+ > - цвет подсвеченного текста</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>COLOR_BTNFACE</STRONG></FONT><FONT 
+ > - цвет передней части кнопки</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>COLOR_BTNSHADOW</STRONG></FONT><FONT 
+ > - цвет тени кнопки</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>COLOR_GRAYTEXT</STRONG></FONT><FONT 
+ > - цвет "серого" текста"</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>COLOR_BTNTEXT</STRONG></FONT><FONT 
+ > - цвет текста в кнопке</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>COLOR_INACTIVECAPTIONTEXT</STRONG></FONT><FONT 
+ > - цвет текста в заголовке неактивного 
+  окна</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>COLOR_BTNHILIGHT</STRONG></FONT><FONT 
+ > - цвет текущей кнопки</FONT> </LI></UL>
+<P><FONT><STRONG><FONT 
+color=green>ВНИМАНИЕ</FONT> : </STRONG>При использовании этих констант к их 
+значению обязательно нужно прибавлять единицу, т.к. первое значение для них 
+равно нулю, а ноль является недействительным значением для логического номера 
+кисти.</FONT></P>
+<P><FONT>Элемент <STRONG><FONT 
+color=#ff3333>clsLpszMenuName</FONT></STRONG> - содержит пару сегмент:смещение 
+на имя меню окна, определенное в файле ресурсов(*).</FONT></P>
+<P><FONT>Элемент <STRONG><FONT 
+color=#ff3333>clsLpszClassName</FONT></STRONG> - содержит пару сегмент:смещение 
+на имя класса. Поскольку после регистрации класс становиться доступен всем 
+другим приложениям Windows, имя класса должно быть уникальным.</FONT></P>
+<P><FONT>Элемент <STRONG><FONT 
+color=#ff3333>clsStyle</FONT></STRONG> определяет свойства окна, которые могут 
+комбинироваться при помощи сложения. Если этому параметру присвоить ноль, то 
+Windows автоматически установит значение clsStyle автоматически. Опишем 
+существующие стили окна :</FONT></P>
+<UL>
+  <LI><FONT color=#ff3333 
+ ><STRONG>CS_BYTEALIGNCLIENT</STRONG></FONT><FONT 
+ > - оказывает влияние на ширину окна, 
+  задавая выравнивание клиентской области на границе байтов</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>CS_BYTEALIGNWINDOW</STRONG></FONT><FONT 
+ > - устанавливает выравнивание окна по 
+  границе байтов</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>CS_CLASSDC</STRONG></FONT><FONT 
+ > - обеспечивает контекст устройства, 
+  используемый совместно всеми окнами класса.</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>CS_DBLCLKS</STRONG></FONT><FONT 
+ > - служит для установки таймера после 
+  получения первого сообщения о нажатии кнопки на мыши</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>CS_GLOBALCLASS</STRONG></FONT><FONT 
+ > - позволяет приложению создавать окно 
+  этого класса, не считаясь со значением параметра clsHInstance</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>CS_HREDRAW</STRONG></FONT><FONT 
+ > - определяет, что окно будет 
+  перерисовываться, как только измениться его горизонтальный размер</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>CS_VREDRAW</STRONG></FONT><FONT 
+ > - определяет, что окно будет 
+  перерисовываться, как только измениться его вертикальный размер</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>CS_NOCLOSE</STRONG></FONT><FONT 
+ > - запрещает пункт "Close" системного 
+  меню</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>CS_OWNDC</STRONG></FONT><FONT 
+ > - предоставляет частный контекст 
+  устройства для каждого окна в данном классе</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>CS_PARENTDC</STRONG></FONT><FONT 
+ > - устанавливает, что дочерние окна не 
+  могут рисовать в родительском окне</FONT> 
+  <LI><FONT color=#ff3333 
+ ><STRONG>CS_SAVEBITS</STRONG></FONT><FONT 
+ > - предписывает системе сохранять копию 
+  части экрана, поврежденной окном</FONT> </LI></UL>
+<P><FONT>Теперь, когда вы ознакомились с 
+полями структуры <STRONG>WNDCLASS</STRONG> можно их мысленно запомнить и, 
+передав адрес структуры в качестве параметра в функцию 
+<STRONG>REGISTERCLASS</STRONG>, произвести регистрацию окна.</FONT></P>
+<P><FONT>После успешной регистрации класса 
+окна мы можем создавать окна этого класса. Для создания окон используется 
+функция <STRONG><FONT color=#ff3333>CREATEWINDOW</FONT>. </STRONG>Эта функция 
+очень громоздка, так как содержит большое число параметров, поэтому постараемся 
+объяснить их назначение.</FONT></P>
+<P><FONT>Параметры функции <STRONG><FONT 
+color=#ff3333>CREATEWINDOW</FONT> </STRONG>:</FONT></P>
+<UL>
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>lpszClassName</FONT></STRONG> : DWORD</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>lpszWindowName</FONT></STRONG> : DWORD</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>dwStyle</FONT></STRONG> : DWORD</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>x</FONT></STRONG> : WORD</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>y</FONT></STRONG> : WORD</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>nWidth</FONT></STRONG> : WORD</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>nHeight</FONT></STRONG> : WORD</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>hWndParent</FONT></STRONG> : WORD</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>hMenu</FONT></STRONG> : WORD</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>hInstance</FONT></STRONG> : WORD</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>lpParam</FONT></STRONG> : DWORD</FONT> </LI></UL>
+<P><FONT>Параметр <STRONG><FONT 
+color=#ff3333>lpszClassName</FONT></STRONG> содержит адрес строки названия 
+класса окна. В данном случае мы будем использовать только, что 
+зарегистрированный класс окна</FONT></P>
+<P><FONT>Параметр <STRONG><FONT 
+color=#ff3333>lpszWindowName</FONT></STRONG> содержит адрес строки, которая 
+будет идентифицировать окно в панели задач, а также будет видна в заголовке 
+окна.</FONT></P>
+<P><FONT>Параметр <STRONG><FONT 
+color=#ff3333>dwStyle</FONT></STRONG> содержит двойное слово параметров (стилей) 
+окна. </FONT></P>
+<P><FONT>Параметры <STRONG><FONT 
+color=#ff3333>x</FONT></STRONG>,<STRONG><FONT 
+color=#ff3333>y</FONT></STRONG>,<STRONG><FONT 
+color=#ff3333>nWidth</FONT></STRONG>,<STRONG><FONT 
+color=#ff3333>nHeight</FONT></STRONG> содержат геометрические координаты 
+местоположения окна на экране.</FONT></P>
+<P><FONT>Параметр <STRONG><FONT 
+color=#ff3333>hWndParent</FONT></STRONG> содержит идентификатор родительского 
+окна. Если это окно основное, то значение этого параметра должно быть равно 
+0.</FONT></P>
+<P><FONT>Параметр <STRONG><FONT 
+color=#ff3333>hMenu</FONT></STRONG> содержит идентификатор меню для создаваемого 
+окна.</FONT></P>
+<P><FONT>Параметр <STRONG><FONT 
+color=#ff3333>hInstance</FONT></STRONG> содержит идентификатор приложения, 
+которое создает это окно.</FONT></P>
+<P><FONT>Параметр <STRONG><FONT 
+color=#ff3333>lpParam</FONT></STRONG> содержит дополнительную информацию об 
+окне.</FONT></P>
+<P><FONT>После создания окна его нужно 
+вывести на экран и вставить в очередь обработки сообщений. Используйте функцию 
+<STRONG><FONT color=#ff3333>SHOWWINDOW</FONT></STRONG>, передайте ей в 
+параметрах - идентификатор вашего окна, и стиль просмотра окна. Для вставки окна 
+в очередь обработки сообщений используется функция <STRONG>UPDATEWINDOW</STRONG> 
+с параметром - идентификатор окна. </FONT></P>
+<P><FONT>Теперь, когда наше первое окно 
+создано и видно на экране, надо попробовать поработать с ним. В данный момент 
+наше окно, и приложение, в том числе представляют собой два мертвых груза, и для 
+того, что бы наша программа ожила нужно начать обрабатывать сообщения. Прежде 
+чем привести пример надо разобраться с еще одной немаловажной структурой - 
+<STRONG><FONT color=#ff3333>MSGSTRUCT</FONT></STRONG>. Эта структура описывает 
+формат сообщения Windows. Мы рассмотрим только часть ее элементов, ибо в 
+большинстве случаев остальные совсем не используются.</FONT></P>
+<UL>
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>msHWND</FONT></STRONG> : WORD - идентификатор окна 
+  <STRONG>HWND</STRONG>, которому было передано сообщение</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>msMESSAGE</FONT></STRONG> : WORD - идентификатор 
+  сообщения</FONT> 
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>msWPARAM</FONT></STRONG> : WORD - параметр 1 </FONT>
+  <LI><FONT><STRONG><FONT 
+  color=#ff3333>msLPARAM</FONT></STRONG> : DWORD - параметр 2</FONT> </LI></UL>
+<P><FONT>Как видите структура сообщения 
+Windows проста, однако, процедура ее обработки не очень :</FONT></P>
+<P><FONT><STRONG><FONT color=#ff3333>msg 
+MSGSTRUCT &lt;0&gt;</FONT></STRONG></FONT></P>
+<P><FONT><STRONG><FONT 
+color=#ff3333>msg_loop:</FONT></STRONG><BR><FONT size=2>; Получаем 
+сообщение</FONT><BR><STRONG><FONT color=#ff3333>call GETMESSAGE,ds offset 
+msg,0,0,0</FONT></STRONG><BR><FONT size=2>; Проверяем на наличие сообщения 
+WM_QUIT (AX=0)</FONT><BR><STRONG><FONT color=#ff3333>cmp 
+ax,0</FONT></STRONG><BR><STRONG><FONT color=#ff3333>je 
+end_loop</FONT></STRONG><BR><FONT size=2>; Обрабатываем 
+сообщение</FONT><BR><STRONG><FONT color=#ff3333>call TRANSLATEMESSAGE,ds offset 
+msg</FONT></STRONG><BR><STRONG><FONT color=#ff3333>call DISPATCHMESSAGE,ds 
+offset msg</FONT></STRONG><BR><FONT size=2>; Обрабатываем следующее 
+сообщение</FONT><BR><STRONG><FONT color=#ff3333>jmp 
+msg_loop</FONT></STRONG><BR><STRONG><FONT 
+color=#ff3333>end_loop:</FONT></STRONG><BR><FONT size=2>; Выходим из 
+программы</FONT><BR><STRONG><FONT color=#ff3333>mov 
+ax,[msg.msWPARAM]</FONT></STRONG><FONT color=#ff3333><BR><STRONG>mov 
+ah,4Ch</STRONG><BR><STRONG>int 21h</STRONG></FONT><BR></FONT></P>
+<P><FONT>Этот кусок кода должен начать 
+работать стразу после создания главного окна. Он отвечает за получение, перевод 
+и передачу сообщения вашему окну. Если этот обработчик получает сообщение 
+<STRONG><FONT color=#ff3333>WM_QUIT</FONT></STRONG>, то он завершает работу 
+программы. Этот участок вашей программы только передает сообщения вашему окну, 
+но не обрабатывает их, для этого существует функция <STRONG><FONT 
+color=#ff3333>WndProc,</FONT></STRONG> адрес которой мы передали при заполнении 
+структуры <STRONG><FONT color=#ff3333>WNDCLASS</FONT>.</STRONG> Именно эта 
+функция разбирает по кусочкам сообщения и передает работу вашим 
+обработчикам.</FONT></P>
+<P><FONT><STRONG><FONT 
+color=#ff3333>WndProc</FONT></STRONG> <FONT 
+color=#ff3333><STRONG>PROC</STRONG><BR><STRONG>ARG 
+hwnd:WORD,wmsg:WORD,wparam:WORD,lparam:DWORD</STRONG><BR></FONT><BR><STRONG><FONT 
+color=#ff3333>cmp [wmsg],WM_DESTROY</FONT><BR></STRONG><FONT size=2>; Если 
+получили сообщение WM_DESTROY (получено сообщение "на 
+выход")</FONT><BR><STRONG><FONT color=#ff3333>je wmdestroy</FONT><BR><FONT 
+color=#ff3333>cmp [wmsg],WM_LBUTTONDOWN</FONT><BR></STRONG><FONT size=2>; Если 
+получили сообщение WM_LBUTTONDOWN (нажата левая кнопка 
+мыши)<BR></FONT><STRONG><FONT color=#ff3333>je wmlbuttondown<BR>cmp 
+[wmsg],WM_CREATE</FONT><BR></STRONG><FONT size=2>; Если получили сообщение 
+WM_CREATE (получено сообщение "создать окно")<BR></FONT><STRONG><FONT 
+color=#ff3333>je wmcreate<BR>cmp [wmsg],WM_RBUTTONDOWN</FONT><BR></STRONG><FONT 
+size=2>; Если получили сообщение WM_RBUTTONDOWN (нажата правая кнопка мыши) 
+<BR></FONT><STRONG><FONT color=#ff3333>je wmrbuttondown<BR>cmp 
+[wmsg],WM_PAINT</FONT><BR></STRONG><FONT size=2>; Если получили сообщение 
+WM_PAINT (получено сообщение "нарисуйся")<BR></FONT><STRONG><FONT 
+color=#ff3333>je wmpaint</FONT><BR></STRONG><FONT size=2>; Если мы не 
+обрабатываем ни одно из вышеперечисленных сообщений передаем<BR>; управление 
+стандартному обработчику<BR></FONT><STRONG><FONT color=#ff3333>jmp 
+defwndproc</FONT><BR></STRONG></FONT></P>
+<P><FONT>Процедура обработки сообщения 
+должна обнулять регистровую пару DX:AX перед выходом из обработчика. Эти 
+регистры используется Windows для получения результатов вызова 
+обработчика.</FONT></P>
+<P><FONT><STRONG><FONT 
+color=green>ВНИМАНИЕ</FONT>: </STRONG>Если переданное сообщение не 
+обрабатывается обработчиком, обязательно нужно передать управление стандартному 
+обработчику. Для того, что бы это сделать нужно вызвать функция <STRONG><FONT 
+color=#ff3333>DEFWINDOWPROC</FONT>, </STRONG>передав ей в параметрах : 
+идентификатор окна, идентификатор сообщения и параметры.</FONT></P>
+<P><FONT>Теперь когда, все рассказано и 
+показано приведем пример рабочей программы :</FONT></P>
+<P><FONT>Файл<STRONG> <A 
+href="window.asm.rar">window.asm</A></STRONG></FONT></P>
+<HR>
+
+<P><FONT><STRONG><FONT 
+color=#ff3333>locals</FONT></STRONG><FONT 
+color=#ff3333><BR><STRONG>jumps</STRONG><BR><STRONG>.model large, WINDOWS 
+PASCAL</STRONG></FONT><STRONG><BR></STRONG><FONT size=2>; Подключаем файл 
+описания констант и структур API<BR></FONT><STRONG><FONT color=#ff3333>include 
+windows.inc</FONT><BR></STRONG><FONT size=2>; Описываем используемые 
+функции<BR></FONT><STRONG><FONT color=#ff3333>extrn BEGINPAINT:PROC<BR>extrn 
+CREATEWINDOW:PROC<BR>extrn DEFWINDOWPROC:PROC<BR>extrn 
+DISPATCHMESSAGE:PROC<BR>extrn ENDPAINT:PROC<BR>extrn GETMESSAGE:PROC<BR>extrn 
+GETSTOCKOBJECT:PROC<BR>extrn INITAPP:PROC<BR>extrn INITTASK:PROC<BR>extrn 
+LOADCURSOR:PROC<BR>extrn MESSAGEBOX:PROC<BR>extrn POSTQUITMESSAGE:PROC<BR>extrn 
+REGISTERCLASS:PROC<BR>extrn SHOWWINDOW:PROC<BR>extrn TEXTOUT:PROC<BR>extrn 
+TRANSLATEMESSAGE:PROC<BR>extrn UPDATEWINDOW:PROC<BR>extrn 
+WAITEVENT:PROC<BR></FONT></STRONG><FONT 
+color=#ff3333><BR><STRONG>.data<BR></STRONG></FONT><BR><FONT size=2>; Для 
+Windows Task Manager'a<BR></FONT><STRONG><FONT color=#ff3333>freespace db 16 
+dup(0)</FONT><BR></STRONG><FONT size=2>; HINSTANCE нашего 
+приложения<BR></FONT><STRONG><FONT color=#ff3333>hInstance dw 
+?</FONT><BR></STRONG><FONT size=2>; Параметр просмотра окна 
+<BR></FONT><STRONG><FONT color=#ff3333>cmdShow dw ?</FONT><BR></STRONG><FONT 
+size=2>; Структура PAINTSTRUCT<BR></FONT><STRONG><FONT color=#ff3333>lppaint 
+PAINTSTRUCT &lt;0&gt;</FONT><BR></STRONG><FONT size=2>; Структура сообщения 
+MSGSTRUCT<BR></FONT><STRONG><FONT color=#ff3333>msg MSGSTRUCT 
+&lt;0&gt;</FONT><BR></STRONG><FONT size=2>; Структура описания 
+окна<BR></FONT><STRONG><FONT color=#ff3333>wc WNDCLASS 
+&lt;0&gt;</FONT><BR></STRONG><FONT size=2>; Заголовок 
+окна<BR></FONT><STRONG><FONT color=#ff3333>lpszTitleName db 'First 
+Window',0</FONT><BR></STRONG><FONT size=2>; Название класса 
+окна<BR></FONT><STRONG><FONT color=#ff3333>lpszClassName db 
+'ASMCLASS',0</FONT><BR></STRONG><FONT size=2>; Выводимая в окно 
+строка<BR></FONT><STRONG><FONT color=#ff3333>lpszText db 'Hello 
+World'</FONT><BR></STRONG><FONT size=2>; Длина строки 
+lpszText<BR></FONT><STRONG><FONT color=#ff3333>lpszTextLength equ 
+$-lpszText</FONT><BR></STRONG><FONT size=2>; Заголовок диалогового 
+окна<BR></FONT><STRONG><FONT color=#ff3333>lpszCaption db 'Mouse 
+Event',0</FONT><BR></STRONG><FONT size=2>; Сообщения диалогового 
+окна<BR></FONT><STRONG><FONT color=#ff3333>lpszLeftMsg db 'Left button 
+pressed',0<BR>lpszRightMsg db 'Right button pressed',0<BR></FONT></STRONG><FONT 
+color=#ff3333><BR><STRONG>.code<BR>.286</STRONG></FONT><STRONG><BR></STRONG><BR><FONT 
+size=2>; Как говоритья в WarLords "Lets The War Begins"<BR></FONT><STRONG><FONT 
+color=green>start:</FONT><BR></STRONG><FONT size=2>; Инициализируем сегмент 
+данных<BR></FONT><STRONG><FONT color=#ff3333>mov ax, @data<BR>mov ds, 
+ax</FONT><BR></STRONG><FONT size=2>; Инициализируем задачу и получаем входные 
+параметры<BR></FONT><STRONG><FONT color=#ff3333>call INITTASK<BR>or 
+ax,ax</FONT><BR></STRONG><FONT size=2>; Если инициализация прошла успешно 
+<BR></FONT><STRONG><FONT color=#ff3333>jnz @@OK</FONT><BR></STRONG><FONT 
+size=2>; Если ошибка <BR></FONT><STRONG><FONT color=#ff3333>jmp 
+@@Fail</FONT><BR><FONT color=green>@@OK: </FONT><BR></STRONG><FONT size=2>; 
+Сохраняем HINSTANCE<BR></FONT><STRONG><FONT color=#ff3333>mov 
+[hInstance],di</FONT><BR></STRONG><FONT size=2>; Сохраняем параметр просмотра 
+окна<BR></FONT><STRONG><FONT color=#ff3333>mov 
+[cmdShow],dx</FONT><BR></STRONG><FONT size=2>; Инициализируем 
+приложение<BR></FONT><STRONG><FONT color=#ff3333>call INITAPP,hInstance<BR>or 
+ax,ax<BR>jnz @@InitOK</FONT><BR><FONT 
+color=green>@@Fail:</FONT><BR></STRONG><FONT size=2>; Если инициализация 
+завершилась неудачно<BR></FONT><STRONG><FONT color=#ff3333>mov ax, 4CFFh<BR>int 
+21h</FONT><BR><FONT color=green>@@InitOK:</FONT><BR></STRONG><FONT size=2>; 
+Заполняем структуру описания окна<BR></FONT><STRONG><FONT color=#ff3333>mov 
+[wc.clsStyle],0<BR>mov word ptr [wc.clsLpfnWndProc],offset WndProc<BR>mov word 
+ptr [wc.clsLpfnWndProc+2],seg WndProc<BR>mov [wc.clsCbClsExtra],0<BR>mov 
+[wc.clsCbWndExtra],0<BR>mov ax,[hInstance]<BR>mov [wc.clsHInstance],ax<BR>mov 
+[wc.clsHIcon],0</FONT><BR></STRONG><FONT size=2>; Загружаем курсор IDC_ARROW и 
+вставляем его в структуру<BR></FONT><STRONG><FONT color=#ff3333>xor 
+ax,ax<BR>call LOADCURSOR,ax IDC_ARROW<BR>mov 
+[wc.clsHCursor],ax</FONT><BR></STRONG><FONT size=2>; Загружаем цвет белого фона 
+и вставляем его в структуру<BR></FONT><STRONG><FONT color=#ff3333>call 
+GETSTOCKOBJECT,WHITE_BRUSH<BR>mov [wc.clsHbrBackground],ax<BR>mov word ptr 
+[wc.clsLpszMenuName],0<BR>mov word ptr [wc.clsLpszMenuName+2],0<BR>mov word ptr 
+[wc.clsLpszClassName],offset lpszClassName<BR>mov word ptr 
+[wc.clsLpszClassName+2],ds</FONT><BR></STRONG><FONT size=2>; Регистрируем 
+структуру описания окна<BR></FONT><STRONG><FONT color=#ff3333>call 
+REGISTERCLASS,ds offset wc</FONT><BR></STRONG><FONT size=2>; Создаем 
+окно<BR></FONT><STRONG><FONT color=#ff3333>xor ax,ax<BR>mov 
+bx,CW_USEDEFAULT<BR>call CREATEWINDOW,ds offset lpszClassName,ds offset 
+lpszTitleName\ 
+,WS_OVERLAPPEDWINDOW,ax,bx,bx,bx,bx,ax,ax,\<BR>[hInstance],ax,ax</FONT><BR></STRONG><FONT 
+size=2>; Показываем окно<BR></FONT><STRONG><FONT color=#ff3333>push ax<BR>call 
+SHOWWINDOW,ax,cmdShow</FONT><BR></STRONG><FONT size=2>; Обновляем 
+окно<BR></FONT><STRONG><FONT color=#ff3333>pop ax<BR>call 
+UPDATEWINDOW,ax</FONT><BR></STRONG><FONT size=2>; Цикл обработки 
+сообщений<BR></FONT><STRONG><FONT 
+color=green>msg_loop:</FONT><BR></STRONG><FONT size=2>; Получаем 
+сообщение<BR></FONT><STRONG><FONT color=#ff3333>call GETMESSAGE,ds offset 
+msg,0,0,0</FONT><BR></STRONG><FONT size=2>; Проверяем на наличие сообщения 
+WM_QUIT (AX=0)<BR></FONT><STRONG><FONT color=#ff3333>cmp ax,0<BR>je 
+end_loop</FONT><BR></STRONG><FONT size=2>; Обрабатываем 
+сообщение<BR></FONT><STRONG><FONT color=#ff3333>call TRANSLATEMESSAGE,ds offset 
+msg<BR>call DISPATCHMESSAGE,ds offset msg</FONT><BR></STRONG><FONT size=2>; 
+Обрабатываем следующее сообщение<BR></FONT><STRONG><FONT color=#ff3333>jmp 
+msg_loop</FONT><BR><FONT color=green>end_loop:</FONT><BR></STRONG><FONT 
+size=2>; Выходим из программы<BR></FONT><STRONG><FONT color=#ff3333>mov 
+ax,[msg.msWPARAM]<BR>mov ah,4Ch<BR>int 21h</FONT><BR></STRONG><FONT 
+size=2>;<BR>; Процедура обработки сообщений<BR>;<BR></FONT><STRONG><FONT 
+color=#ff3333>WndProc PROC<BR>ARG 
+hwnd:WORD,wmsg:WORD,wparam:WORD,lparam:DWORD<BR></FONT></STRONG><BR><STRONG><FONT 
+color=#ff3333>cmp [wmsg],WM_DESTROY</FONT><BR></STRONG><FONT size=2>; Если 
+получили сообщение WM_DESTROY (получено сообщение "на 
+выход")<BR></FONT><STRONG><FONT color=#ff3333>je wmdestroy<BR>cmp 
+[wmsg],WM_LBUTTONDOWN</FONT><BR></STRONG><FONT size=2>; Если получили сообщение 
+WM_LBUTTONDOWN (нажата левая кнопка мыши)<BR></FONT><STRONG><FONT 
+color=#ff3333>je wmlbuttondown<BR>cmp [wmsg],WM_CREATE</FONT><BR></STRONG><FONT 
+size=2>; Если получили сообщение WM_CREATE (получено сообщение "создать 
+окно")<BR></FONT><STRONG><FONT color=#ff3333>je wmcreate<BR>cmp 
+[wmsg],WM_RBUTTONDOWN</FONT><BR></STRONG><FONT size=2>; Если получили сообщение 
+WM_RBUTTONDOWN (нажата правая кнопка мыши) <BR></FONT><STRONG><FONT 
+color=#ff3333>je wmrbuttondown<BR>cmp [wmsg],WM_PAINT</FONT><BR></STRONG><FONT 
+size=2>; Если получили сообщение WM_PAINT (получено сообщение 
+"нарисуйся")<BR></FONT><STRONG><FONT color=#ff3333>je 
+wmpaint</FONT><BR></STRONG><FONT size=2>; Если мы не обрабатываем ни одно из 
+вышеперечисленных сообщений передаем<BR>; управление стандартному 
+обработчику<BR></FONT><STRONG><FONT color=#ff3333>jmp 
+defwndproc</FONT><BR></STRONG><FONT size=2>; <BR>; Обработка сообщения 
+WM_PAINT<BR>;<BR></FONT><STRONG><FONT 
+color=green>wmpaint:</FONT><BR></STRONG><FONT size=2>; Начинаем рисование и 
+получаем указатель на текущий DC<BR></FONT><STRONG><FONT color=#ff3333>call 
+BEGINPAINT,hwnd,ds offset lppaint</FONT><BR></STRONG><FONT size=2>; AX содержит 
+контекст устройства DC, полученный после вызова 
+BEGINPAINT<BR></FONT><STRONG></STRONG><FONT size=2>; Вызываем TEXTOUT для вывода 
+строки lpszText<BR></FONT><STRONG><FONT color=#ff3333>call TEXTOUT,ax,5,5,ds 
+offset lpszText,lpszTextLength</FONT><BR></STRONG><FONT size=2>; Заканчиваем 
+рисование<BR></FONT><STRONG><FONT color=#ff3333>call ENDPAINT,hwnd,ds offset 
+lppaint</FONT><BR></STRONG><FONT size=2>; Обнуляем AX и на 
+выход<BR></FONT><STRONG><FONT color=#ff3333>xor ax,ax<BR>jmp 
+finish</FONT><BR></STRONG><FONT size=2>;<BR>; Обработка сообщения 
+WM_CREATE<BR>;<BR></FONT><STRONG><FONT 
+color=green>wmcreate:</FONT><BR></STRONG><FONT size=2>; Обнуляем AX и на 
+выход<BR></FONT><STRONG><FONT color=#ff3333>xor ax,ax<BR>jmp 
+finish</FONT><BR></STRONG><FONT size=2>;<BR>; Вызов стандартного обработчика 
+сообщений <BR>;<BR></FONT><STRONG><FONT 
+color=green>defwndproc:</FONT><BR><FONT color=#ff3333>call 
+DEFWINDOWPROC,hwnd,wmsg,wparam,lparam<BR>jmp finish</FONT><BR></STRONG><FONT 
+size=2>;<BR>; Обработка сообщения WM_DESTROY<BR>;<BR></FONT><STRONG><FONT 
+color=green>wmdestroy:</FONT><BR></STRONG><FONT size=2>; Вызываем 
+POSTQUITMESSAGE<BR></FONT><STRONG><FONT color=#ff3333>call 
+POSTQUITMESSAGE,0</FONT><BR></STRONG><FONT size=2>; Обнуляем AX и на 
+выход<BR></FONT><STRONG><FONT color=#ff3333>xor ax,ax<BR>jmp 
+finish<BR></FONT></STRONG>;<FONT size=2><BR>; Обработка сообщения 
+WM_LBUTTONDOWN<BR>;<BR></FONT><STRONG><FONT 
+color=green>wmlbuttondown:</FONT><BR></STRONG><FONT size=2>; Выводим на экран 
+MESSAGEBOX с надписью "Left button pressed"<BR></FONT><STRONG><FONT 
+color=#ff3333>call MESSAGEBOX,0,ds offset lpszLeftMsg,ds offset 
+lpszCaption,0</FONT><BR></STRONG><FONT size=2>; Обнуляем AX и на 
+выход<BR></FONT><STRONG><FONT color=#ff3333>xor ax,ax<BR>jmp 
+finish</FONT><BR></STRONG><FONT size=2>;<BR>; Обработка сообщения 
+WM_RBUTTONDOWN<BR>;<BR></FONT><STRONG><FONT 
+color=green>wmrbuttondown:</FONT><BR></STRONG><FONT size=2>; Выводим на экран 
+MESSAGEBOX с надписью "Right button pressed"<BR></FONT><STRONG><FONT 
+color=#ff3333>call MESSAGEBOX,0,ds offset lpszRightMsg,ds offset 
+lpszCaption,0</FONT><BR></STRONG><FONT size=2>; Обнуляем AX и на 
+выход<BR></FONT><STRONG><FONT color=#ff3333>xor ax,ax<BR>jmp 
+finish</FONT><BR></STRONG><FONT size=2>;<BR>; "Финишная 
+прямая"<BR>;<BR></FONT><STRONG><FONT 
+color=green>finish:</FONT><BR></STRONG><FONT size=2>; Обнуляем DX и на 
+выход<BR></FONT><STRONG><FONT color=#ff3333>xor dx,dx<BR>ret<BR>WndProc 
+ENDP<BR></FONT></STRONG><FONT color=#ff3333><BR><STRONG>end 
+start</STRONG></FONT><STRONG><BR></STRONG></FONT></P>
+<HR>
+
+<P><FONT>Файл <STRONG><A 
+href="window.def.rar">window.def</A></STRONG></FONT></P>
+<HR>
+
+<P><FONT><STRONG>NAME WINDOW<BR>EXETYPE 
+WINDOWS<BR>CODE MOVABLE DISCARDABLE<BR>DATA MOVABLE MULTIPLE 
+DISCARDABLE<BR>STACKSIZE 5120<BR>HEAPSIZE 4096<BR>DESCRIPTION 'Copyright(C) 1999 
+BlackWolf'</STRONG></FONT></P>
+<HR>
+
+<P><FONT>Ну, вот и все про окна и 
+сообщения.
+  <p><div align="center"><a href="index.htm">	<img src="../../soder.gif" width=120 height=31 border=0 alt=""></a></div></p>
+</BODY></HTML>

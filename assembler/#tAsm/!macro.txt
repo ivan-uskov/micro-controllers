@@ -1,0 +1,8 @@
+PRINT MACRO y
+  PUSH AX
+  MOV AL, y
+  MOV AH, 0Eh
+  INT 10h
+  POP AX
+ENDM
+

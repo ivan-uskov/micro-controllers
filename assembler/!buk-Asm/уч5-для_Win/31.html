@@ -1,0 +1,246 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0036)http://www.chat.ru/~win32asm/31.html -->
+<HTML><HEAD><TITLE>Демонстрационная Программа</TITLE>
+</head>
+<BODY background="../../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Демонстрационная программа </font></b></div></p>
+<!-- битые у них какие-то картнки почти все 
+<P>
+<CENTER>GraphDemo:<BR><IMG alt=GraphDemo height=265 src="31.files/grdemo.gif" 
+width=400> </CENTER>-->
+<P>Текст программы: <PRE class=dtext2>.386
+.model flat, stdcall
+include win32.inc
+
+extrn            BeginPaint:PROC
+extrn            BitBlt:PROC
+extrn            CreateCompatibleBitmap:PROC
+extrn            CreateCompatibleDC:PROC
+extrn            CreateHatchBrush:PROC
+extrn            CreatePen:PROC
+extrn            CreateWindowExA:PROC
+extrn            DefWindowProcA:PROC
+extrn            DeleteDC:PROC
+extrn            DeleteObject:PROC
+extrn            DispatchMessageA:PROC
+extrn            Ellipse:PROC
+extrn            EndPaint:PROC
+extrn            ExitProcess:PROC
+extrn            GetClientRect:PROC
+extrn            GetMessageA:PROC
+extrn            GetModuleHandleA:PROC
+extrn            GetStockObject:PROC
+extrn            LineTo:PROC
+extrn            LoadCursorA:PROC
+extrn            LoadIconA:PROC
+extrn            MoveToEx:PROC
+extrn            PatBlt:PROC
+extrn            PostQuitMessage:PROC
+extrn            Rectangle:PROC
+extrn            RegisterClassA:PROC
+extrn            SelectObject:PROC
+extrn            SetPixel:PROC
+extrn            ShowWindow:PROC
+extrn            TranslateMessage:PROC
+extrn            UpdateWindow:PROC
+
+BITMAP struct
+   bmType       dd ?
+   bmWidth      dd ?
+   bmHeight     dd ?
+   bmWidthBytes dd ?
+   bmPlanes     dw ?
+   bmBitsPixel  dw ?
+   bmBits       dd ?
+BITMAP ends
+
+SRCCOPY          = 00CC0020h
+PATCOPY          = 00F00021h
+TRUE             = 1
+FALSE            = 0
+
+.data
+
+newhwnd          dd 0
+msg              MSGSTRUCT   <?>
+wc               WNDCLASS    <?>
+Rect             RECT <?>
+
+hDC              dd ?
+hCompatibleDC    dd ?
+PaintStruct      PAINTSTRUCT <?>
+hCompatibleBitmap dd ?
+hBitmap          dd ?
+hOldBitmap       dd ?
+hOldPen          dd ?
+hOldBrush        dd ?
+
+Pens             dd 2 dup(?)
+Brushes          dd 2 dup(?)
+
+hInstance        dd 0
+
+szTitleName      db 'GraphDemo', 0
+szClassName      db 'ASMCLASS32',0
+x                dd ?
+y                dd ?
+p                dd ?
+
+.code
+;-----------------------------------------------------------------------------
+start:
+        call    GetModuleHandleA, 0
+        mov     [hInstance], eax
+
+; initialize the WndClass structure
+        mov     [wc.clsStyle], CS_HREDRAW + CS_VREDRAW
+        mov     [wc.clsLpfnWndProc], offset GraphDemoWndProc
+        mov     [wc.clsCbClsExtra], 0
+        mov     [wc.clsCbWndExtra], 0
+
+        mov     eax, [hInstance]
+        mov     [wc.clsHInstance], eax
+
+        call    LoadIconA, 0, IDI_APPLICATION
+        mov     [wc.clsHIcon], eax
+
+        call    LoadCursorA, 0 ,IDC_ARROW
+        mov     [wc.clsHCursor], eax
+
+        call    GetStockObject, WHITE_BRUSH
+        mov     [wc.clsHbrBackground], eax
+
+        mov     [wc.clsLpszMenuName], 0
+        mov     [wc.clsLpszClassName], offset szClassName
+
+        call    RegisterClassA, offset wc
+
+        call    CreateWindowExA, 0,offset szClassName,offset szTitleName, \
+                WS_OVERLAPPEDWINDOW,CW_USEDEFAULT, \
+                CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,0,0, \
+                [hInstance], 0
+
+        mov     [newhwnd], eax
+
+        call    ShowWindow, [newhwnd], SW_SHOWNORMAL
+        call    UpdateWindow, [newhwnd]
+
+msg_loop:
+        call    GetMessageA, offset msg, 0, 0, 0
+        .if     eax != 0
+                call    TranslateMessage, offset msg
+                call    DispatchMessageA, offset msg
+                jmp     msg_loop
+        .endif
+        call    ExitProcess, [msg.msWPARAM]
+
+
+;-----------------------------------------------------------------------------
+GraphDemoWndProc    proc uses ebx edi esi, hwnd:DWORD, wmsg:DWORD,\
+                    wparam:DWORD, lparam:DWORD
+
+        cmp     [wmsg], WM_PAINT
+        je      wmpaint
+        cmp     [wmsg], WM_DESTROY
+        je      wmdestroy
+
+        call    DefWindowProcA, [hwnd],[wmsg],[wparam],[lparam]
+        jmp     finish
+
+wmpaint:
+        ;---------------------------------------
+        call    CreatePen, 1,0,0FF0000h
+        mov     [dword ptr Pens], eax
+        call    CreatePen, 3,0,000000h
+        mov     [dword ptr Pens+4], eax
+
+        call    CreateHatchBrush, 1,00000FFh
+        mov     [dword ptr Brushes], eax
+        call    CreateHatchBrush, 2,0FF0080h
+        mov     [dword ptr Brushes+4], eax
+        ;---------------------------------------
+        call    GetClientRect, [hwnd], offset Rect
+        call    BeginPaint, [hwnd], offset PaintStruct
+        mov     [hDC], eax
+        call    CreateCompatibleDC, [hDC]
+        mov     [hCompatibleDC], eax
+        call    GetClientRect, [hwnd], offset Rect
+
+        call    CreateCompatibleBitmap, [hDC],[Rect.rcRight],[Rect.rcBottom]
+        mov     [hCompatibleBitmap], eax
+
+        call    SelectObject, [hCompatibleDC],[hCompatibleBitmap]
+        mov     [hOldBitmap], eax
+
+        call    PatBlt, [hCompatibleDC],0,0,[Rect.rcRight], \
+                [Rect.rcBottom], PATCOPY
+        ;---------------------------------------
+        mov     [x], 0
+        mov     [y], 0
+        mov     [p], 0
+  @@lp2:
+        call    SetPixel, [hCompatibleDC],[x],[y],00FF0000h
+        .if     eax == -1
+                mov   [x], 0
+                add   [y], 10h
+        .endif
+        add     [x], 10h
+        .if     eax == -1
+                cmp   [p], -1
+                jz    @@lp3
+        .endif
+        mov     [p], eax
+        jmp  @@lp2
+  @@lp3:
+        ;---------------------------------------
+        call    SelectObject, [hCompatibleDC],[dword ptr Pens]
+        mov     [hOldPen], eax
+        call    MoveToEx, [hCompatibleDC],[Rect.rcLeft],[Rect.rcTop],0
+        call    LineTo, [hCompatibleDC],[Rect.rcRight],[Rect.rcBottom]
+
+        call    SelectObject, [hCompatibleDC],[dword ptr Pens+4]
+        call    MoveToEx, [hCompatibleDC],[Rect.rcRight],[Rect.rcTop],0
+        call    LineTo, [hCompatibleDC],[Rect.rcLeft],[Rect.rcBottom]
+        call    SelectObject, [hCompatibleDC],[hOldPen]
+        ;=======================================
+        call    SelectObject, [hCompatibleDC],[dword ptr Brushes]
+        mov     [hOldBrush], eax
+        call    Rectangle, [hCompatibleDC],100,75,450,200
+
+        call    SelectObject, [hCompatibleDC],[dword ptr Brushes+4]
+        call    Ellipse, [hCompatibleDC],50,50,200,100
+        call    SelectObject, [hCompatibleDC],[hOldBrush]
+        ;=======================================
+        call    BitBlt, [hDC],[PaintStruct.PSrcPaint.rcLeft], \
+                [PaintStruct.PSrcPaint.rcTop], \
+                [PaintStruct.PSrcPaint.rcRight], \
+                [PaintStruct.PSrcPaint.rcBottom], \
+                [hCompatibleDC], \
+                [PaintStruct.PSrcPaint.rcLeft], \
+                [PaintStruct.PSrcPaint.rcTop], \
+                SRCCOPY
+
+        call    DeleteObject, [dword ptr Pens]
+        call    DeleteObject, [dword ptr Pens+4]
+        call    DeleteObject, [dword ptr Brushes]
+        call    DeleteObject, [dword ptr Brushes+4]
+
+        call    SelectObject, [hCompatibleDC], [hOldBitmap]
+        call    DeleteObject, [hCompatibleBitmap]
+        call    DeleteDC, [hCompatibleDC]
+        call    EndPaint, [hwnd],offset PaintStruct
+        mov     eax, 0
+        jmp     finish
+
+wmdestroy:
+        call    DeleteObject, [hBitmap]
+        call    PostQuitMessage, 0
+        mov     eax, 0
+finish:
+        ret
+GraphDemoWndProc          endp
+
+ends
+end start
+</PRE>
+<p><div align="center"><a href="gr.html">	<img src="../../back.gif" width=66 height=29 border=0 alt=""></a></div></p></BODY></HTML>

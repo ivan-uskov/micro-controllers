@@ -1,0 +1,98 @@
+<HTML>
+<HEAD>
+
+<TITLE>В объектно ориентированном программировании существует такое понятие как механизм сокрытия данных</TITLE>
+</HEAD>
+<body background="../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Пример 14 </font></b></div></p>
+<P><!-- saved from url=(0022)http://internet.e-mail --></P>
+
+</FONT><P>&nbsp;&nbsp;&nbsp; <FONT>В объектно-ориентированном программировании существует такое понятие как механизм сокрытия данных. Давайте возьмем случай когда вы покупаете магнитофон то вам доступны только те его части которые необходимы для работы с ним</FONT><FONT> (</FONT><FONT>кнопочки, экранчики и т.д.), такие части как провода, магнитные головки и т.д. вам не доступны. В структурах и классах(позже мы узнаем что это такое) сокрытие данных осуществляется с помощью ключевых слов public(открытый), private(закрытый) и protected(защищенный). Закрытые члены в программе недоступны, а открытые наоборот доступны. Внутри структуры после ключевого слова private, все члены ограничены доступом. Закрытыми членами могут пользоваться только функции-члены этой структуры. Открытые члены могут использоваться и вне структуры.<BR>
+&nbsp;&nbsp;&nbsp; Напишем структуру характеризующую квартиру. В ней будут такие члены как number(номер квартиры), count_room(количество комнат), floor(этаж), area(площадь), price(цена), status(приватизирована или нет), эти члены мы сделаем закрытыми, а для доступа к ним напишем функции.</P>
+</FONT><FONT FACE="Courier New" COLOR="#0000ff"><P>struct kwart<BR>
+{<BR>
+public:<BR>
+&nbsp;&nbsp;&nbsp; int GetNumber();<BR>
+&nbsp;&nbsp;&nbsp; int GetCountRoom();<BR>
+&nbsp;&nbsp;&nbsp; int GetFloor();<BR>
+&nbsp;&nbsp;&nbsp; int GetArea();<BR>
+&nbsp;&nbsp;&nbsp; int GetPrice();<BR>
+&nbsp;&nbsp;&nbsp; bool GetStatus();<BR>
+&nbsp;&nbsp;&nbsp; void SetNumber(int);<BR>
+&nbsp;&nbsp;&nbsp; void SetCountRoom(int);<BR>
+&nbsp;&nbsp;&nbsp; void SetFloor(int);<BR>
+&nbsp;&nbsp;&nbsp; void SetArea(int);<BR>
+&nbsp;&nbsp;&nbsp; void SetPrice(int);<BR>
+&nbsp;&nbsp;&nbsp; void SetStatus(bool);<BR>
+private:<BR>
+&nbsp;&nbsp;&nbsp; int number;<BR>
+&nbsp;&nbsp;&nbsp; int count_room;<BR>
+&nbsp;&nbsp;&nbsp; int floor;<BR>
+&nbsp;&nbsp;&nbsp; int area;<BR>
+&nbsp;&nbsp;&nbsp; int price;<BR>
+&nbsp;&nbsp;&nbsp; bool status;<BR>
+};<BR>
+<BR>
+int kwart::GetNumber()<BR>
+{<BR>
+&nbsp;&nbsp;&nbsp; return number;<BR>
+}<BR>
+<BR>
+int kwart::GetCountRoom()<BR>
+{<BR>
+&nbsp;&nbsp;&nbsp; return count_room;<BR>
+}<BR>
+<BR>
+int kwart::GetFloor()<BR>
+{<BR>
+&nbsp;&nbsp;&nbsp; return floor;<BR>
+}<BR>
+<BR>
+int kwart::GetArea()<BR>
+{<BR>
+&nbsp;&nbsp;&nbsp; return area;<BR>
+}<BR>
+int kwart::GetPrice()<BR>
+{<BR>
+&nbsp;&nbsp;&nbsp; return price;<BR>
+}<BR>
+bool kwart::GetStatus()<BR>
+{<BR>
+&nbsp;&nbsp;&nbsp; return status;<BR>
+}<BR>
+void kwart::SetNumber(int num)<BR>
+{<BR>
+&nbsp;&nbsp;&nbsp; number = num;<BR>
+}<BR>
+void kwart::SetCountRoom(int count)<BR>
+{<BR>
+&nbsp;&nbsp;&nbsp; count_room = count;<BR>
+}<BR>
+void kwart::SetFloor(int num)<BR>
+{<BR>
+&nbsp;&nbsp;&nbsp; floor = num;<BR>
+}<BR>
+void kwart::SetArea(int num)<BR>
+{<BR>
+&nbsp;&nbsp;&nbsp; area = num;<BR>
+}<BR>
+void kwart::SetPrice(int num)<BR>
+{<BR>
+&nbsp;&nbsp;&nbsp; price = num;<BR>
+}<BR>
+void kwart::SetStatus(bool stat)<BR>
+{<BR>
+&nbsp;&nbsp;&nbsp; status = stat;<BR>
+}</P>
+</FONT><P>&nbsp;&nbsp;&nbsp;<FONT FACE="Courier New" COLOR="#0000ff"> </FONT><FONT>Теперь если мы напишем:</P>
+</FONT><FONT FACE="Courier New" COLOR="#0000ff"><P>kwart kw;<BR>
+int i = kw.area;</P>
+</FONT><FONT><P>это будет ошибкой, так как переменная </FONT><FONT FACE="Courier New" COLOR="#0000ff">area</FONT><FONT> - закрытая, если мы хотим присвоить переменной </FONT><FONT COLOR="#0000ff">i</FONT><FONT> ее значение, то нужно воспользоваться функцией </FONT><FONT FACE="Courier New" COLOR="#0000ff">GetArea()</FONT><FONT>:</P>
+</FONT><FONT FACE="Courier New" COLOR="#0000ff"><P>kwart kw;<BR>
+kw.SetArea(20);<BR>
+int i = kw.GetArea();</P>
+</FONT><FONT><P>А вот в этом фрагменте уже все правильно. Сначала мы переменной </FONT><FONT FACE="Courier New" COLOR="#0000ff">area</FONT><FONT> с помощью функции </FONT><FONT FACE="Courier New" COLOR="#0000ff">SetArea()</FONT><FONT> </FONT><FONT>присваиваем значение 20, а потом переменной </FONT><FONT COLOR="#0000ff">i</FONT><FONT> </FONT><FONT>присваиваем значение </FONT><FONT FACE="Courier New" COLOR="#0000ff">area</FONT><FONT>.</P>
+</FONT><P><HR></P>
+<P ALIGN="CENTER"><A HREF="lesson13.html"><FONT>предыдущий пример</FONT></A></P>
+<p><div align="center"><a href="index.html">	<img src="../soder.gif" width=120 height=31 border=0 alt=""></a></div></p></BODY>
+</HTML>

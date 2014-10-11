@@ -1,0 +1,15 @@
+#define IDM_1 1
+#define IDM_2 2
+#define IDM_EXIT 3
+#define IDM_ABOUT 4
+MENU_1 MENU
+    BEGIN
+      POPUP "File"
+        BEGIN
+             MENUITEM "MenuItem &GRAYED",  IDM_1, GRAYED
+             MENUITEM "MenuItem &INACTIVE",  IDM_2, INACTIVE
+             MENUITEM SEPARATOR
+             MENUITEM "&Exit",  IDM_EXIT
+        END
+      MENUITEM "&About",  IDM_ABOUT
+    END

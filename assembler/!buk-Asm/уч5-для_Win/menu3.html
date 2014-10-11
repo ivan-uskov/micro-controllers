@@ -1,0 +1,117 @@
+<HTML>
+<HEAD>
+<TITLE>Menu 3</TITLE>
+</HEAD>
+<BODY background="../../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial"></font></b></div></p>
+
+
+<p class="dtext1">Меню можно создать динамически, без создания ресурса. 
+<br>
+Программа cr_menu3.asm имеет в памяти шаблон меню, потом из шаблона создаст "объект" меню с
+помощью LoadMenuIndirect, которая вернет дискриптор меню. Меню может затем быть добавлено при
+создании окна, устанавливая дискриптор меню в соответствующий аргумент CreateWindowEx.<br>
+<br>
+Вы можете также создать окно без меню и потом дополнить используя SetMenu.<br>
+Эта функция API может также использоваться для изменения меню. Меню могут удалить
+используя NULL вместо дискриптора меню.
+<pre class="dtext2">
+        push    offset MenuTemplate ;шаблон меню
+        call    LoadMenuIndirectA
+        mov     [hMenu], eax        ;hMenu - menu handle
+</pre>
+Шаблон меню состоит из заголовка и списка пунктов меню.
+<pre class="dtext2">
+MENUEX_TEMPLATE_HEADER struct
+    wVersion       dw ?
+    wOffset        dw ?
+    dwHelpId       dd ?
+MENUEX_TEMPLATE_HEADER ends
+</pre>
+wVersion - версия шаблона, должна быть равна 1.<br>
+wOffset - смещение относительно конца этого поля. Если первое определение пункта меню
+следует за dwHelpId, то wOffset должен быть 4.<br>
+dwHelpId - идентификатор подсказки.<br><br>
+
+Заголовок должен выравниваться по DWORD границе.<br>
+
+
+Пункт меню:
+<pre class="dtext2">
+ typedef struct {
+     DWORD  dwType;
+     DWORD  dwState;
+     UINT   uId;
+     WORD   bResInfo;
+     WCHAR  szText[1];
+     // DWORD dwHelpId;
+ } MENUEX_TEMPLATE_ITEM;
+</pre>
+dwType - тип пункта меню.<br>
+dwState - состояние пункта меню.<br>
+UINT - уникальный идентификатор.<br>
+bResInfo - величина введенная для обозначения последнего пункта меню, подменю...<br>
+szText - текст пункта меню. Это Unicode строка оканчивающаяся 0, выравнивается по WORD границе.<br>
+dwHelpId - идентификатор подсказки. Нужен только при создании POPUP меню.<br>
+<br>
+
+Пример:
+<pre class="dtext2">
+MenuTemplate      MENUEX_TEMPLATE_HEADER<1,4,0>
+
+                  ; &File
+                  dd MFT_STRING  ;     Type
+                  dd MFS_ENABLED ;     State
+                  dd 0           ;     Id
+                  dw MFR_POPUP   ;     ResInfo
+                  dw '&','F','i','l','e',0,0   ;     Text
+                  dd 0           ;     HelpId
+
+                  ; MenuItem &GRAYED
+                  dd MFT_STRING  ;     Type
+                  dd MFS_GRAYED  ;     State
+                  dd IDM_1       ;     Id
+                  dw 0           ;     ResInfo
+                  dw 'M','e','n','u','I','t','e','m',' '   ; Text
+                  dw '&','G','R','A','Y','E','D',0
+                  ; dd 0 - HelpId only with popup menu
+
+                  ; MenuItem &DISABLED
+                  dd MFT_STRING  ;     Type
+                  dd MF_DISABLED ;     State
+                  dd IDM_2       ;     Id
+                  dw 0           ;     ResInfo
+                  dw 'M','e','n','u','I','t','e','m',' '   ; Text
+                  dw '&','D','I','S','A','B','L','E','D',0
+                  ; dd 0         ;     HelpId
+
+                  ; ------------------
+                  dd MFT_SEPARATOR,0,0
+                  dw 0,0
+
+                  ; E&xit
+                  dd MFT_STRING  ;     Type
+                  dd MFS_ENABLED ;     State
+                  dd IDM_EXIT    ;     Id
+                  dw MFR_END     ;     ResInfo
+                  dw 'E','&','x','i','t',0,0    ; Text
+                  ; dd 0         ;     HelpId
+
+                  ; &About
+                  dd MFT_STRING  ;     Type
+                  dd MFS_ENABLED ;     State
+                  dd IDM_ABOUT   ;     Id
+                  dw MFR_END     ;     ResInfo
+                  dw '&','A','b','o','u','t',0    ; Text
+                  ;  dd 0        ;     HelpId
+
+
+</pre>
+
+<P CLASS="dtext1">
+Полный текст: <a href="cr_menu3.zip">cr_menu3.zip</a><P>
+
+
+<p><div align="center"><a href="res.html">	<img src="../../back.gif" width=66 height=29 border=0 alt=""></a></div></p>
+</BODY>
+</HTML>

@@ -1,0 +1,153 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<meta name="Author" content="Dmitry L. Smirnoff (C) 2001">
+<link REL="stylesheet" HREF="(Styles).css" TYPE="text/css">
+<title>4.3. Адресация 16-битными указателями</title>
+</head>
+
+<body background="(Фон).gif">
+
+<hr>
+
+<p>16-битная адресация применяется в реальном
+режиме работы процессора. Эффективный адрес
+вычисляется как сумма до трех 16-битных компонент:
+базы, индекса и смещения в команде (см. рис.1).</p>
+
+<h3><img src="04-03-рис01.gif"><br>
+Рис.1. Процесс формирования адреса в 16-битной
+адресации</h3>
+
+<p>Эффективный адрес (Effective Address - EA) считается
+смещением (offset) или расстоянием от базы текущего
+сегмента памяти, поэтому на втором этапе
+эффективный адрес суммируется с базой сегмента,
+которая равна содержимому сегментного регистра
+(селектору), умноженному на 16. В результате
+получается 20-битный линейный адрес. Когда
+страничное преобразование запрещено (это
+происходит в реальном режиме работы процессора),
+линейный адрес выдается на шину адреса как
+физический адрес памяти длиной 32 бита. При
+разрешенном страничном преобразовании (в
+защищенном режиме работы процессора) старшие 20
+бит линейного адреса преобразуются с помощью
+таблиц страниц. При этом линейный адрес
+формируется только внутри процессора, что и
+объясняет введение нового термина.</p>
+
+<p>Большинство режимов адресации относятся к
+косвенной регистровой адресации. Она
+применяется как для адресации данных, так и в
+командах передачи управления. Однако в командах
+передачи управления процессор обеспечивает
+косвенную адресацию через память.</p>
+
+<p>Во многих командах местонахождение операнда
+определяет байт <i>mod r/m</i>. Одним из операндов
+(источником иди получателем) является содержимое
+регистра общего назначения. Второй операнд может
+находиться в регистре общего назначения или
+ячейке памяти. Для задания обоих операндов байт <i>mod
+r/m</i> содержит три поля (см. рис.2, на котором для
+удобства представления позиции полей <i>mod</i> и <i>reg</i>
+изменены).</p>
+
+<h3><img src="04-03-рис02.gif"><br>
+Рис.2. Двухоперандная команда с байтом <i>mod r/m</i></h3>
+
+<p>Трехбитное ноле <i>reg</i> определяет регистровый
+операнд так, как это было рассмотрено ранее (см.<a href="04-02.htm#t2">
+п.4.2, табл.2</a>). Двухбитное поле <i>mod</i> показывает,
+находится ли второй операнд в регистре или
+памяти. Если он содержится в регистре (<i>mod</i> = 11b),
+то трехбитное поле <i>r/m</i> определяет второй
+регистровый операнд. В противном случае, оба поля <i>mod</i>
+и <i>r/m</i> совместно задают используемый режим
+адресации. Суммарные сведения о режимах
+адресации памяти приведены в табл.1. В этой
+таблице <i>d8</i> и <i>d16</i> обозначают 8- и 16-битное
+смещение в команде. Предполагается, что
+сегментным регистром по умолчанию является
+регистр DS.</p>
+
+<p>Отметим, что в 16-битной адресации применяются
+только регистры ВХ, SI, DI и ВР (в стековых операциях
+неявно привлекается регистр SP).</p>
+
+<div align="center"><center>
+
+<table WIDTH="80%" BgColor="#C0C0C0" BorderColorLight="#FFFFFF" BorderColorDark="#000000"
+BORDER="2" RULES="ALL">
+  <caption>Таблица 1. Формирование эффективного адреса
+  памяти в 16-битной адресации</caption>
+  <tr>
+    <td WIDTH="10%" VALIGN="top" bgcolor="#00FFFF" rowspan="2">Поле<br>
+    <i>r/m</i></td>
+    <td WIDTH="66%" VALIGN="top" bgcolor="#00FFFF" colspan="3">Адрес памяти
+    второго операнда</td>
+  </tr>
+  <tr>
+    <td WIDTH="22%" VALIGN="top" bgcolor="#00FFFF"><i>mod</i> = 00b</td>
+    <td WIDTH="22%" VALIGN="top" bgcolor="#00FFFF"><i>mod</i> = 01b</td>
+    <td WIDTH="22%" VALIGN="top" bgcolor="#00FFFF"><i>mod</i> = 10b</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">000</td>
+    <td WIDTH="22%" VALIGN="top">[BX+SI]</td>
+    <td WIDTH="22%" VALIGN="top">[BX+SI+<font color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[BX+SI+<font color="#00FF00">d16</font>]</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">001</td>
+    <td WIDTH="22%" VALIGN="top">[BX+DI]</td>
+    <td WIDTH="22%" VALIGN="top">[BX+DI+<font color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[BX+DI+<font color="#00FF00">d16</font>]</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">010</td>
+    <td WIDTH="22%" VALIGN="top">[<font color="#FFFF00">SS</font>:BP+SI]</td>
+    <td WIDTH="22%" VALIGN="top">[<font color="#FFFF00">SS</font>:BP+SI+<font color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[<font color="#FFFF00">SS</font>:BP+SI+<font color="#00FF00">d16</font>]</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">011</td>
+    <td WIDTH="22%" VALIGN="top">[<font color="#FFFF00">SS</font>:BP+DI]</td>
+    <td WIDTH="22%" VALIGN="top">[<font color="#FFFF00">SS</font>:BP+DI+<font color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[<font color="#FFFF00">SS</font>:BP+DI+<font color="#00FF00">d16</font>]</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">100</td>
+    <td WIDTH="22%" VALIGN="top">[SI]</td>
+    <td WIDTH="22%" VALIGN="top">[SI+<font color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[SI+<font color="#00FF00">d16</font>]</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">101</td>
+    <td WIDTH="22%" VALIGN="top">[DI]</td>
+    <td WIDTH="22%" VALIGN="top">[DI+<font color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[DI+<font color="#00FF00">d16</font>]</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">110</td>
+    <td WIDTH="22%" VALIGN="top">[<font color="#00FF00">d16</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[<font color="#FFFF00">SS</font>:BP+<font color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[<font color="#FFFF00">SS</font>:BP+<font color="#00FF00">d16</font>]</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">111</td>
+    <td WIDTH="22%" VALIGN="top">[BX]</td>
+    <td WIDTH="22%" VALIGN="top">[BX+<font color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[BX+<font color="#00FF00">d16</font>]</td>
+  </tr>
+</table>
+</center></div>
+
+<hr>
+
+<p>Следующий раздел - “<a href="04-04.htm">4.4. Адресация
+32-битными указателями</a>”</p>
+</body>
+</html>

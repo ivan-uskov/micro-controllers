@@ -1,0 +1,37 @@
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1251"> <TITLE>Lesson 12</TITLE>
+</HEAD>
+<body background="../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Пример 12 </font></b></div></p>
+
+<P>&nbsp;&nbsp; <FONT>Структуры в С++ могут иметь в качестве своих членов(в предыдущем примере это s и top) не только переменные но и функции. Для этого объявление функций вставляется в объявление структуры, например предыдущий пример стека можно объявить так:</FONT> </P>
+<FONT FACE="Courier New" COLOR="#0000ff"><P>struct stack<BR>
+{<BR>
+&nbsp; char s[1000];<BR>
+&nbsp; int top;<BR>
+&nbsp; void reset()<BR>
+&nbsp; {<BR>
+&nbsp;&nbsp;&nbsp; top = -1;<BR>
+&nbsp; }<BR>
+&nbsp; void push(char c)<BR>
+&nbsp; {<BR>
+&nbsp;&nbsp;&nbsp; ++top;<BR>
+&nbsp;&nbsp;&nbsp; s[top] = c;<BR>
+&nbsp; }<BR>
+&nbsp; char pop()<BR>
+&nbsp; {<BR>
+&nbsp;&nbsp;&nbsp; --top;<BR>
+&nbsp;&nbsp;&nbsp; return s[top];<BR>
+&nbsp; }<BR>
+};</FONT><FONT COLOR="#0000ff"> </P>
+</FONT><P>&nbsp;&nbsp; <FONT>Функции-члены записаны&nbsp;так же как&nbsp;обычные функции. Отличие лишь в том что теперь они могут использовать переменные и функции "как есть", им не нужно передовать в качестве параметров такие переменные как s и top. Обращаются к функциям-членам так же как и к обычным членам:&nbsp;с помощью оператора ".", а указатели&nbsp;с помощью оператора "-&gt;". Приведем несколько фрагментов кода:</FONT> </P>
+<FONT FACE="Courier New" COLOR="#0000ff"><P>stack My_stack;<BR>
+My_stack.reset();</P>
+<P>stack *pMy_stack = &amp;My_stack;<BR>
+pMy_stack-&gt;push('A');</P>
+</FONT><P>&nbsp;&nbsp; <FONT>Переменные&nbsp;структур и классов(позже мы узнаем что это) принято называть - "объектами", с этой минуты и мы их будем так называть.</FONT> </P>
+<P><HR></P>
+<P ALIGN="CENTER"><A HREF="lesson11.html"><FONT>предыдущий пример</FONT></A><FONT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </FONT><A HREF="lesson13.html"><FONT>следующий пример</FONT></A> </P><p><div align="center"><a href="index.html">	<img src="../soder.gif" width=120 height=31 border=0 alt=""></a></div></p>
+</BODY>
+</HTML>

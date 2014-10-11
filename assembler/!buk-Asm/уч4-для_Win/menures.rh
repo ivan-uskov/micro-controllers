@@ -1,0 +1,6 @@
+#define	ICON_1		1
+#define	MENU_1		1
+#define	CM_EXIT		104
+#define	CM_THIRDMENU	103
+#define	CM_SECONDMENU	102
+#define	CM_FIRSTMENU	101

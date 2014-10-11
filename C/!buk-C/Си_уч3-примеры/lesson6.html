@@ -1,0 +1,86 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Урок 6</title>
+</head>
+<body background="../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Пример 6 </font></b></div></p>
+
+<p align="center"><font size="4">Массивы</font></p>
+<p><font>&nbsp;&nbsp;&nbsp; Массив состоит из нескольких элементов одного и тогоже типа. Число элементов массива задается при его объявлении и в дальнейшем не меняется. Массивы объявляются так же как и переменные. Например:</font><br>
+<br>
+<font color="#0000FF" face="Courier New">int a[100];<br>
+char b[40];</font><br>
+<br>
+<font>В первой строке объявлен массив из 100 элементов типа int, а во второй из 40 элементов типа char. Ко всему массиву целиком можно обращаться по имени. Можно обращаться и к отдельным элементам по индексу, который указывает относительную позицию элемента. Индексация массива начинается с нуля т.е. в массиве
+</font><font color="#0000FF" face="Courier New"> a</font><font> первый элемент будет
+</font><font color="#0000FF" face="Courier New">a[0]</font><font>, а последний
+</font><font face="Courier New" color="#0000FF">a[99]</font><font>.<br>
+&nbsp;&nbsp;&nbsp; Бывают многомерные массивы. Например двумерный массив int v[3][7] можно представить как три массива типа int по 7 элементов в каждом. Представим это графически:</font></p>
+<div align="left">
+  <table border="1" width="35%">
+    <tr>
+      <td width="22%" align="left">v[0]</td>
+      <td width="11%" align="center">
+        <p align="center">0</td>
+      <td width="11%" align="center">1</td>
+      <td width="11%" align="center">2</td>
+      <td width="11%" align="center">3</td>
+      <td width="11%" align="center">4</td>
+      <td width="11%" align="center">5</td>
+      <td width="12%" align="center">6</td>
+    </tr>
+    <tr>
+      <td width="22%" align="left">v[1]</td>
+      <td width="11%" align="center">0</td>
+      <td width="11%" align="center">1</td>
+      <td width="11%" align="center">2</td>
+      <td width="11%" align="center">3</td>
+      <td width="11%" align="center">4</td>
+      <td width="11%" align="center">5</td>
+      <td width="12%" align="center">6</td>
+    </tr>
+    <tr>
+      <td width="22%" align="left">v[2]</td>
+      <td width="11%" align="center">0</td>
+      <td width="11%" align="center">1</td>
+      <td width="11%" align="center">2</td>
+      <td width="11%" align="center">3</td>
+      <td width="11%" align="center">4</td>
+      <td width="11%" align="center">5</td>
+      <td width="12%" align="center">6</td>
+    </tr>
+  </table>
+</div>
+<p>&nbsp;&nbsp;&nbsp; <font>Напишем програмку
+с применением двумерного массива, которая спросит у вас сначало фамилию потом имя и отчество и в конце выведет это все на экран.</font><br>
+<br>
+<font color="#0000FF" face="Courier New">#include &lt;iostream.h><br>
+<br>
+int main()<br>
+{<br>
+&nbsp;&nbsp;&nbsp; char fio[3][25];<br>
+&nbsp;&nbsp;&nbsp; cout &lt;&lt; "Your surname: ";<br>
+&nbsp;&nbsp;&nbsp; cin >> fio[0];<br>
+&nbsp;&nbsp;&nbsp; cout &lt;&lt; "\nYour name: ";<br>
+&nbsp;&nbsp;&nbsp; cin >> fio[1];<br>
+&nbsp;&nbsp;&nbsp; cout &lt;&lt; "\nYour patronymic name: ";<br>
+&nbsp;&nbsp;&nbsp; cin >> fio[2];<br>
+&nbsp;&nbsp;&nbsp; cout &lt;&lt; "\n" &lt;&lt; fio[0] &lt;&lt; " " &lt;&lt; fio[1] &lt;&lt; " " &lt;&lt; fio[2] &lt;&lt; endl;<br>
+&nbsp;&nbsp;&nbsp; return 0;<br>
+}</font></p>
+
+<A href="Examples/l6_var1.rar">Текст программы</a><br>
+<A href="Examples/l6_var1.exe">Запустить пример</a>
+
+<hr>
+<p align="center"><a href="lesson5.html"><font color="#000000">предыдущий
+пример</font></a><font color="#000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="lesson7.html">следующий пример</a></font></p>
+<p><div align="center"><a href="index.html">	<img src="../soder.gif" width=120 height=31 border=0 alt=""></a></div></p>
+</body>
+
+</html>

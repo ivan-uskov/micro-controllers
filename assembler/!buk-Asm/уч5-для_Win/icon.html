@@ -1,0 +1,76 @@
+<HTML>
+<HEAD>
+<TITLE>Icon</TITLE>
+</HEAD>
+<BODY background="../../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial"> </font></b></div></p>
+
+<P CLASS="dtext1">
+Для использования собственной иконки нужно создать файл ресурса:
+<pre CLASS="dtext2">
+-->Begin icon.rc <--
+
+  ICON_1 ICON 180.ico
+  ICON_SM ICON 163.ico
+
+-->End of icon.rc<--
+</pre>
+<P CLASS="dtext1">
+Затем icon.rc откомпилировать с помощью какого-нибудь компилятора ресурсов(res-файл должен
+быть 32-bit Windows compatible). Возьмем brcc32.exe:<br>
+<pre CLASS="dtext2">
+  brcc32 icon.rc</pre>
+Получим icon.res - понадобится при линковании.
+<P>
+<pre CLASS="dtext2">
+WNDCLASSEX struct
+  clSize           dword    ?
+  clStyle          dword    ?
+  clLpfnWndProc    dword    ?
+  clCbClsExtra     dword    ?
+  clCbWndExtra     dword    ?
+  clHInstance      dword    ?
+  clHIcon          dword    ?
+  clHCursor        dword    ?
+  clHbrBackground  dword    ?
+  clLpszMenuName   dword    ?
+  clLpszClassName  dword    ?
+  clHIconSm        dword    ?
+WNDCLASSEX ends
+</pre>
+<P CLASS="dtext1">
+clHIcon: Содержит дискриптор иконки получаемый после вызова LoadIcon.<br>
+clHIconSm: Тоже самое для маленькой иконки, если null то используется hIcon.
+<pre CLASS="dtext2">
+--------------------------------------------------
+.data
+  szIconName       db 'ICON_1', 0
+  szIconSmName     db 'ICON_SM', 0
+  ...
+--------------------------------------------------
+.code
+  ...
+  push    offset szIconName
+  push    [hInst]
+  call    LoadIconA
+  mov     [wc.clHIcon], eax
+
+  push    offset szIconSmName
+  push    [hInst]
+  call    LoadIconA
+  mov     [wc.clHIconSm], eax
+  ...
+  регистируем класс, создаем окно...
+---------------------------------------------------
+</pre>
+<P CLASS="dtext1">
+При линковании нужно указать файл ресурса:
+<pre CLASS="dtext2">
+  tlink32 [options] my.obj,my.exe,,,,my.res</pre>
+<P CLASS="dtext1">
+Полный текст программы: <a href="cr_icon.zip">cr_icon.zip</a><P>
+
+<p><div align="center"><a href="res.html">	<img src="../../back.gif" width=66 height=29 border=0 alt=""></a></div></p>
+
+</BODY>
+</HTML>

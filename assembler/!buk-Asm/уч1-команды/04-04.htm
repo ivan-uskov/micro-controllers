@@ -1,0 +1,369 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<meta name="Author" content="Dmitry L. Smirnoff (C) 2001">
+<link REL="stylesheet" HREF="(Styles).css" TYPE="text/css">
+<title>4.4. Адресация 32-битными указателями</title>
+</head>
+
+<body background="(Фон).gif">
+
+<hr>
+
+<p>Режимы 32-битной адресации применяются при
+выполнении 32-битного кода в защищенном режиме и
+отражают основные усовершенствования
+процессоров i80386 и i80486. Они создают намного более
+общую и мощную среду для выполнения программ по
+сравнению с 16-битной адресацией и упрощают
+разработку программ. В частности, для адресации
+можно использовать любой регистр общего
+назначения, а индекс разрешается масштабировать
+(умножить) на 1, 2, 4 или 8. Чтобы показать гибкость
+таких режимов адресации, рассмотрим примеры
+простых команд со всеми способами локализации
+операндов (см. табл.1).</p>
+<div align="center"><center>
+
+<table WIDTH="80%" BgColor="#C0C0C0" BorderColorLight="#FFFFFF" BorderColorDark="#000000"
+BORDER="2" RULES="ALL">
+  <caption>Таблица 1. Примеры команд с 32-битной
+  адресацией</caption>
+  <tr>
+    <td WIDTH="50%" VALIGN="top" bgcolor="#00FFFF">Вид адресации</td>
+    <td WIDTH="50%" VALIGN="top" bgcolor="#00FFFF">Пример команды</td>
+  </tr>
+  <tr>
+    <td WIDTH="50%" VALIGN="top">Непосредственная</td>
+    <td WIDTH="50%" VALIGN="top"><i>mov EAX,12345678h</i></td>
+  </tr>
+  <tr>
+    <td WIDTH="50%" VALIGN="top">Регистровая</td>
+    <td WIDTH="50%" VALIGN="top"><i>mov EAX,ECX</i></td>
+  </tr>
+  <tr>
+    <td WIDTH="50%" VALIGN="top">Прямая (абсолютная)</td>
+    <td WIDTH="50%" VALIGN="top"><i>mov EAX,[12345678h]</i></td>
+  </tr>
+  <tr>
+    <td WIDTH="50%" VALIGN="top">Регистровая косвенная</td>
+    <td WIDTH="50%" VALIGN="top"><i>mov EAX,[ECX]</i></td>
+  </tr>
+  <tr>
+    <td WIDTH="50%" VALIGN="top">Базовая/индексная со смещением</td>
+    <td WIDTH="50%" VALIGN="top"><i>mov EAX,[ECX+1200h]</i></td>
+  </tr>
+  <tr>
+    <td WIDTH="50%" VALIGN="top">Базово-индексная со смещением</td>
+    <td WIDTH="50%" VALIGN="top"><i>mov EAX,[ECX+EDX+40h]</i></td>
+  </tr>
+  <tr>
+    <td WIDTH="50%" VALIGN="top">Индексная с масштабированием и
+    смещением</td>
+    <td WIDTH="50%" VALIGN="top"><i>mov EAX,[ESI*4+400h]</i></td>
+  </tr>
+  <tr>
+    <td WIDTH="50%" VALIGN="top">Базово-индексная с
+    масштабированием</td>
+    <td WIDTH="50%" VALIGN="top"><i>mov EAX,[EDX+ECX*8]</i></td>
+  </tr>
+  <tr>
+    <td WIDTH="50%" VALIGN="top">Базово-индексная с
+    масштабированием и смещением</td>
+    <td WIDTH="50%" VALIGN="top"><i>mov EAX,[EBX+EDI*2+20h]</i></td>
+  </tr>
+</table>
+</center></div>
+
+<p>Интересно отметить, что формирование 32-битного
+адреса благодаря конвейерной архитектуре
+процессора i80x86 не увеличивает время выполнения
+команд. Это способствует повышению его
+производительности, так как адресовать память
+приходится во многих командах программы.</p>
+
+<h3><img src="04-04-рис01.gif"><br>
+Рис.1. Процесс формирования адреса в 32-битной
+адресации</h3>
+
+<p>В 32-битном защищенном режиме эффективный адрес
+вычисляется на первом этапе как сумма до трех
+компонент: база, индекс и смещение (см. рис.1). Так
+как эффективный адрес считается смещением
+(расстоянием) от базы текущего сегмента памяти,
+на втором этапе он суммируется с базовым адресом
+сегмента, в результате чего образуется 32-битный
+линейный адрес. Теперь 32-битная база сегмента
+берется из дескриптора сегмента, т.е. 8-байтной
+структуры данных, которая описывает
+характеристики и местонахождение сегмента. (Мы
+пока не касаемся страничного преобразования
+адреса, которое заменяет старшие 20 бит линейного
+адреса, поэтому линейный адрес считается и
+физическим адресом памяти).</p>
+
+<p>Отметим появление в адресных вычислениях блока
+контроля: процессор при каждом обращении к
+памяти автоматически проверяет, разрешает ли это
+обращение механизм защиты. Когда этот механизм
+обнаруживает несанкционированное обращение,
+процессор генерирует особый случай защиты и
+отказывается от обращения к памяти.</p>
+
+<p>32-битные режимы адресации кодируются с помощью
+двух байт: <i>mod r/m</i> и <i>sib</i>. Когда в команде
+фигурируют только смещение или база и смещение,
+достаточно одного байта <i>mod r/m</i>. Когда же в
+команде определяются базовый и индексный
+регистры, приходится привлекать байт <i>sib</i>.</p>
+
+<p>Одним из операндов (источником или получателем)
+является содержимое регистра общего назначения,
+идентифицируемого полем <i>reg</i> так, как это было
+рассмотрено ранее (см.<a href="04-02.htm#t2"> п.4.2, табл.2</a>).
+Второй операнд может находиться в регистре
+общего назначения или ячейке памяти. Для задания
+обоих операндов байт <i>mod r/m</i> содержит три поля,
+интерпретация которых аналогична 16-битной
+адресации. Отличие заключается в том, что, когда
+поле <i>mod</i> определяет память (т.е. его значение не
+равно 11b) и поле <i>r/m</i> содержит 100b, за байтом <i>mod r/m</i>
+находится байт <i>sib</i>, обеспечивающий более
+сложные режимы адресации. Формат двухоперандной
+команды с двумя байтами адресации <i>mod r/m</i> и <i>sib</i>
+имеет следующий вид.</p>
+
+<h3><img src="04-04-рис02.gif"><br>
+Рис.2. Двухоперандная команда с байтами <i>mod r/m</i> и <i>sib</i></h3>
+
+<p>Напомним, что поле <i>ss</i> указывает масштабный
+коэффициент индекса, поле <i>index</i> определяет
+любой регистр общего назначения (кроме ESP),
+который служит индексным регистром, и поле <i>base</i>
+идентифицирует любой регистр общего назначения,
+участвующий в адресации как базовый регистр.
+Суммарные сведения о режимах адресации памяти
+приведены в таблице 1 и 2. В них d8 и d32 обозначают 8-
+или 32-битное смещение в команде. Предполагается,
+что сегментным регистром по умолчанию является
+регистр DS.</p>
+<div align="center"><center>
+
+<table WIDTH="80%" BgColor="#C0C0C0" BorderColorLight="#FFFFFF" BorderColorDark="#000000"
+BORDER="2" RULES="ALL">
+  <caption>Таблица 1. Формирование эффективного адреса
+  памяти в 32-битной адресации<br>
+  (<i>r/m</i> не равно 100b)</caption>
+  <tr>
+    <td WIDTH="10%" VALIGN="top" bgcolor="#00FFFF" rowspan="2">Поле<br>
+    <i>r/m</i></td>
+    <td WIDTH="66%" VALIGN="top" bgcolor="#00FFFF" colspan="3">Адрес памяти
+    второго операнда</td>
+  </tr>
+  <tr>
+    <td WIDTH="22%" VALIGN="top" bgcolor="#00FFFF"><i>mod</i> = 00b</td>
+    <td WIDTH="22%" VALIGN="top" bgcolor="#00FFFF"><i>mod</i> = 01b</td>
+    <td WIDTH="22%" VALIGN="top" bgcolor="#00FFFF"><i>mod</i> = 10b</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">000</td>
+    <td WIDTH="22%" VALIGN="top">[EAX]</td>
+    <td WIDTH="22%" VALIGN="top">[EAX+<font color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[EAX+<font color="#00FF00">d32</font>]</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">001</td>
+    <td WIDTH="22%" VALIGN="top">[ECX]</td>
+    <td WIDTH="22%" VALIGN="top">[ECX+<font color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[ECX+<font color="#00FF00">d32</font>]</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">010</td>
+    <td WIDTH="22%" VALIGN="top">[EDX]</td>
+    <td WIDTH="22%" VALIGN="top">[EDX+<font color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[EDX+<font color="#00FF00">d32</font>]</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">011</td>
+    <td WIDTH="22%" VALIGN="top">[EBX]</td>
+    <td WIDTH="22%" VALIGN="top">[EBX+<font color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[EBX+<font color="#00FF00">d32</font>]</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">100</td>
+    <td WIDTH="22%" VALIGN="top">Имеется байт <font color="#0000FF"><i>sib</i></font>
+    </td>
+    <td WIDTH="22%" VALIGN="top">Имеется байт <font color="#0000FF"><i>sib</i></font>
+    </td>
+    <td WIDTH="22%" VALIGN="top">Имеется байт <font color="#0000FF"><i>sib</i></font>
+    </td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">101</td>
+    <td WIDTH="22%" VALIGN="top">[<font color="#00FF00">d32</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[<font color="#FFFF00">SS</font>:EBP+<font color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[<font color="#FFFF00">SS</font>:EBP+<font color="#00FF00">d32</font>]</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">110</td>
+    <td WIDTH="22%" VALIGN="top">[ESI]</td>
+    <td WIDTH="22%" VALIGN="top">[ESI+<font color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[ESI+<font color="#00FF00">d32</font>]</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">111</td>
+    <td WIDTH="22%" VALIGN="top">[EDI]</td>
+    <td WIDTH="22%" VALIGN="top">[EDI+<font color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[EDI+<font color="#00FF00">d32</font>]</td>
+  </tr>
+</table>
+</center></div>
+
+<p>.</p>
+<div align="center"><center>
+
+<table WIDTH="80%" BgColor="#C0C0C0" BorderColorLight="#FFFFFF" BorderColorDark="#000000"
+BORDER="2" RULES="ALL">
+  <caption>Таблица 2. Формирование эффективного адреса
+  памяти в 32-битной адресации<br>
+  (<i>r/m</i> = 100b)</caption>
+  <tr>
+    <td WIDTH="10%" VALIGN="top" bgcolor="#00FFFF" rowspan="2">Поле<br>
+    <i>base</i></td>
+    <td WIDTH="66%" VALIGN="top" bgcolor="#00FFFF" colspan="3">Адрес памяти
+    второго операнда</td>
+  </tr>
+  <tr>
+    <td WIDTH="22%" VALIGN="top" bgcolor="#00FFFF"><i>mod</i> = 00b</td>
+    <td WIDTH="22%" VALIGN="top" bgcolor="#00FFFF"><i>mod</i> = 01b</td>
+    <td WIDTH="22%" VALIGN="top" bgcolor="#00FFFF"><i>mod</i> = 10b</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">000</td>
+    <td WIDTH="22%" VALIGN="top">[EAX+<i>ss*index</i>]</td>
+    <td WIDTH="22%" VALIGN="top">[EAX+<i>ss*index</i>+<font color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[EAX+<i>ss*index</i>+<font color="#00FF00">d32</font>]</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">001</td>
+    <td WIDTH="22%" VALIGN="top">[ECX+<i>ss*index</i>]</td>
+    <td WIDTH="22%" VALIGN="top">[ECX+<i>ss*index</i>+<font color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[ECX+<i>ss*index</i>+<font color="#00FF00">d32</font>]</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">010</td>
+    <td WIDTH="22%" VALIGN="top">[EDX+<i>ss*index</i>]</td>
+    <td WIDTH="22%" VALIGN="top">[EDX+<i>ss*index</i>+<font color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[EDX+<i>ss*index</i>+<font color="#00FF00">d32</font>]</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">011</td>
+    <td WIDTH="22%" VALIGN="top">[EBX+<i>ss*index</i>]</td>
+    <td WIDTH="22%" VALIGN="top">[EBX+<i>ss*index</i>+<font color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[EBX+<i>ss*index</i>+<font color="#00FF00">d32</font>]</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">100</td>
+    <td WIDTH="22%" VALIGN="top">[<font color="#FFFF00">SS</font>:ESP+<i>ss*index</i>]</td>
+    <td WIDTH="22%" VALIGN="top">[<font color="#FFFF00">SS</font>:ESP+<i>ss*index</i>+<font
+    color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[<font color="#FFFF00">SS</font>:ESP+<i>ss*index</i>+<font
+    color="#00FF00">d32</font>]</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">101</td>
+    <td WIDTH="22%" VALIGN="top">[<font color="#00FF00">d32</font>+<i>ss*index</i>]</td>
+    <td WIDTH="22%" VALIGN="top">[<font color="#FFFF00">SS</font>:EBP+<i>ss*index</i>+<font
+    color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[<font color="#FFFF00">SS</font>:EBP+<i>ss*index</i>+<font
+    color="#00FF00">d32</font>]</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">110</td>
+    <td WIDTH="22%" VALIGN="top">[ESI+<i>ss*index</i>]</td>
+    <td WIDTH="22%" VALIGN="top">[ESI+<i>ss*index</i>+<font color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[ESI+<i>ss*index</i>+<font color="#00FF00">d32</font>]</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">111</td>
+    <td WIDTH="22%" VALIGN="top">[EDI+<i>ss*index</i>]</td>
+    <td WIDTH="22%" VALIGN="top">[EDI+<i>ss*index</i>+<font color="#00FF00">d8</font>]</td>
+    <td WIDTH="22%" VALIGN="top">[EDI+<i>ss*index</i>+<font color="#00FF00">d32</font>]</td>
+  </tr>
+</table>
+</center></div>
+
+<p>В заключение приведем табл.3, показывающую
+кодирование полей <i>index</i> и <i>ss</i>.</p>
+<div align="center"><center>
+
+<table WIDTH="80%" BgColor="#C0C0C0" BorderColorLight="#FFFFFF" BorderColorDark="#000000"
+BORDER="2" RULES="ALL">
+  <caption>Таблица 3. Кодирование полей <i>index</i> и <i>ss</i> в
+  байте <i>sib</i></caption>
+  <tr>
+    <td WIDTH="10%" VALIGN="top" bgcolor="#00FFFF">Поле<br>
+    <i>index</i></td>
+    <td WIDTH="22%" VALIGN="top" bgcolor="#00FFFF">Индексный регистр</td>
+    <td WIDTH="22%" VALIGN="top" bgcolor="#00FFFF">Поле<br>
+    <i>ss</i></td>
+    <td WIDTH="22%" VALIGN="top" bgcolor="#00FFFF">Множитель</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">000</td>
+    <td WIDTH="22%" VALIGN="top">EAX</td>
+    <td WIDTH="22%" VALIGN="top">00</td>
+    <td WIDTH="22%" VALIGN="top">1</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">001</td>
+    <td WIDTH="22%" VALIGN="top">ECX</td>
+    <td WIDTH="22%" VALIGN="top">01</td>
+    <td WIDTH="22%" VALIGN="top">2</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">010</td>
+    <td WIDTH="22%" VALIGN="top">EDX</td>
+    <td WIDTH="22%" VALIGN="top">10</td>
+    <td WIDTH="22%" VALIGN="top">4</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">011</td>
+    <td WIDTH="22%" VALIGN="top">EBX</td>
+    <td WIDTH="22%" VALIGN="top">11</td>
+    <td WIDTH="22%" VALIGN="top">8</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">100</td>
+    <td WIDTH="22%" VALIGN="top">Отсутствует</td>
+    <td WIDTH="44%" VALIGN="top" colspan="2" rowspan="4">&nbsp;</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">101</td>
+    <td WIDTH="22%" VALIGN="top">EBP</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">110</td>
+    <td WIDTH="22%" VALIGN="top">ESI</td>
+  </tr>
+  <tr>
+    <td WIDTH="10%" VALIGN="top">111</td>
+    <td WIDTH="22%" VALIGN="top">EDI</td>
+  </tr>
+</table>
+</center></div>
+
+<blockquote>
+  <p><b>Примечание</b>: Когда поле <i>index</i> содержит 100b,
+  показывая отсутствие индексного регистра, поле <i>ss</i>
+  должно содержать 00b; в противном случае
+  эффективный адрес не определен.</p>
+</blockquote>
+
+<hr>
+
+<p>Следующий раздел - “<a href="04-05.htm">4.5. Режимы
+адресации данных</a>”</p>
+</body>
+</html>

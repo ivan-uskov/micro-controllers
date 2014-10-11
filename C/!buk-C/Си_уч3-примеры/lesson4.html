@@ -1,0 +1,90 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Урок 4</title>
+</head>
+<body background="../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Пример 4 </font></b></div></p>
+
+<p><font>&nbsp;&nbsp;&nbsp; Инструкция <i> if-else</i> схожа и тесно связана с инструкцией
+<i>if</i>, она имеет вид:</font></p>
+<p><font face="Courier New" color="#0000FF"><i>if(условие)<br>
+{<br>
+&nbsp;&nbsp;&nbsp; инструкции 1<br>
+}<br>
+else<br>
+{<br>
+&nbsp;&nbsp;&nbsp; инструкции 2<br>
+}</i></font></p>
+<p><font>Если </font><i><font color="#0000FF" face="Courier New"> условие</font></i><font> истинно то выполняются
+</font><i><font color="#0000FF" face="Courier New"> инструкции 1</font></i><font>, а
+</font><i><font color="#0000FF" face="Courier New"> инструкции 2</font></i><font> пропускаются, если
+</font><i><font color="#0000FF" face="Courier New"> условие</font></i><font> ложно, то выполняются
+</font><i><font color="#0000FF" face="Courier New"> инструкции 2</font></i><font>, а
+</font><i><font color="#0000FF" face="Courier New"> инструкции 1</font></i><font> пропускаются. Например:<br>
+<br>
+</font><font face="Courier New" color="#0000FF">int main()<br>
+{<br>
+&nbsp;&nbsp;&nbsp; int a = 0;<br>
+&nbsp;&nbsp;&nbsp; int b = 4;<br>
+<br>
+&nbsp;&nbsp;&nbsp; if(a == b)<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; a = 4;<br>
+&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp; else<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; a = 3;<br>
+&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp; return 0;<br>
+}</font><font><br>
+
+<p><A href="Examples/l4_var1.rar">Текст программы</a></P>
+
+<br>
+Здесь <font color="#0000FF"> a</font> присвоится 3, т.к. условие
+</font><font color="#0000FF" face="Courier New"> a == b</font><font> ложно.<br>
+<br>
+Инструкция <i> while</i> имеет вид:<br>
+<br>
+</font><i><font color="#0000FF" face="Courier New">while(условие)<br>
+{<br>
+инструкции<br>
+}</font></i><font><br>
+<br>
+Здесь сначала проверяется </font><i><font color="#0000FF" face="Courier New"> условие</font></i><font> и если оно истинно то выполняются
+</font><i><font color="#0000FF" face="Courier New"> инструкции</font></i><font>, после управление переходит опять в начало цикла к
+</font><i><font color="#0000FF" face="Courier New"> условию</font></i><font> и так до тех пор пока
+</font><i><font color="#0000FF" face="Courier New"> условие</font></i><font> не станет ложным. Например:<br>
+<br>
+</font><font color="#0000FF" face="Courier New">int main()<br>
+{<br>
+&nbsp;&nbsp;&nbsp; int a = 0;<br>
+&nbsp;&nbsp;&nbsp; while(a &lt; 20)<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ++a;<br>
+&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp; return 0;<br>
+}</font><font><br>
+
+<P><A href="Examples/l4_var2.rar">Текст программы</a></P>
+
+<br>
+Оператор <font color="#0000FF"><i> ++</i></font> увеличивает переменную на 1 т.е. выражение
+</font><font color="#0000FF" face="Courier New"> ++a</font><font> идентично
+</font><font color="#0000FF" face="Courier New"> a + 1</font><font>. В нашем цикле
+<font color="#0000FF"> a</font> будет увеличиваться на 1 пока не станет равно 20.<br>
+<br>
+</font></p>
+
+<hr>
+<p align="center"><a href="lesson3.html"><font color="#000000">предыдущий
+пример</font></a><font color="#000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="lesson5.html">следующий пример</a></font></p>
+<p><div align="center"><a href="index.html">	<img src="../soder.gif" width=120 height=31 border=0 alt=""></a></div></p>
+</body>
+
+</html>

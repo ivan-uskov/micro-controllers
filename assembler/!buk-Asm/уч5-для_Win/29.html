@@ -1,0 +1,23 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0036)http://www.chat.ru/~win32asm/29.html -->
+<HTML><HEAD><TITLE>Рисование Дуги И Сектора Эллипса</TITLE>
+</head>
+<BODY background="../../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Рисование дуги и сектора эллипса </font></b></div></p>
+
+<P>Возьмем из файла wingdi.h описание функции Arc(), которая используется для 
+рисования дуги: <PRE>  WINGDIAPI BOOL  WINAPI Arc(HDC, int, int, int, int, int, int, int, int);
+</PRE>Первые пять аргументов полностью аналогичны аргументам функции Ellipse(). 
+Непосредственно дуга определяется еще двумя точками. Первая - начало дуги - 
+находится на пересечении эллипса, частью которого является дуга, и прямой, 
+проходящей через центр прямоугольника и точку начала дуги. На рисунке начало 
+дуги обозначено StartX, StartY. Вторая - конец дуги - определяется аналогично. 
+Конец дуги обозначен EndX, EndY. Таким образом, для прорисовки дуги необходимо 
+сначала определить точки StartX, StartY и EndX, EndY, после чего прорисовывать 
+дугу. Дуга прорисовывается против часовой стрелки. 
+<P>
+<CENTER><IMG alt=Ellipse height=259 src="29.files/ellipse.gif" 
+width=400></CENTER>
+<P>У функции Pie(), которая применяется для рисования сектора эллипса, набор 
+аргументов и их обозначения абсолютно идентичны функции Arc(). 
+<p><div align="center"><a href="gr.html">	<img src="../../back.gif" width=66 height=29 border=0 alt=""></a></div></p></BODY></HTML>

@@ -1,0 +1,333 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+<meta name="Author" content="Dmitry L. Smirnoff (C) 2001">
+<link REL="stylesheet" HREF="(Styles).css" TYPE="text/css">
+<title>4.2. Общий формат команды</title>
+</head>
+
+<body background="(Фон).gif">
+
+<hr>
+
+<p>Общий формат команды процессоров семейства i80x86
+приведен на рис.1. Команды состоят из
+необязательных префиксов, одного или двух байт
+(главного) кода операции, спецификатора адреса,
+представленного байтами <i>mod r/m</i> и <i>sib</i>,
+смещения операнда в памяти (<i>displacement</i>) и
+непосредственных данных.</p>
+
+<h3><img src="04-02-рис01.gif"><br>
+Рис.1. Общий формат команды процессоров семейства
+i80x86</h3>
+
+<p>Английские аббревиатуры означают следующее: <i>base</i>
+- база, <i>mode</i> - режим, <i>register/memory</i> -
+регистр/память, <i>scale</i> - масштаб, <i>index</i> - индекс.
+Из всех полей команды обязательными являются
+только один или два байта кода операции.
+Например, команда инвертирования флажка
+переноса <i>cmc</i> состоит всего из одного байта
+кода операции, а команда<i> </i>“<i>lock add FS:[EBX+8+ESI*4],30000h</i>”
+содержит все поля.</p>
+
+<p><b>Префикс</b> - это байт со специальным
+кодированием, который модифицирует операцию
+одной находящейся за ним команды. В системе
+команд процессоров семейства i80x86 предусмотрены
+следующие префиксы: 
+
+<ol>
+  <li><b>Повторения</b> (<i>REPeate</i>), применяется в
+    цепочечных командах для автоматической
+    обработки всех элементов цепочки.</li>
+  <li><b>Размера операнда</b> (<i>Operand Size</i>), переключает 16-
+    и 32-битные операнды.</li>
+  <li><b>Размера адреса</b> (<i>AddressSize</i>), коммутирует
+    формирование 16- и 32 -битных адресов.</li>
+  <li><b>Замены сегмента</b> (<i>Segment override</i>), явно
+    определяет сегментный регистр для конкретной
+    команды вместо сегментного регистра,
+    принимаемого по умолчанию.</li>
+</ol>
+
+<p>Перед некоторыми командами с обращением к
+памяти разрешается также указывать префикс <i>lock</i>
+блокировки шины. Наличие этого префикса
+заставляет процессор сформировать активный
+выходной сигнал LOCK#, который через арбитр шины
+запрещает другим процессорам в
+мультипроцессорной системе доступ к памяти на
+время выполнения команды с блокировкой шины.
+Необходимость блокировки шины связана с
+разделением системных ресурсов и применяемых
+для этого семафоров.</p>
+
+<p>Один или два байта кода операции определяют то
+действие, выполнение которого инициирует
+команда. Двухбайтные коды операций введены для
+новых команд, например PUSH FS, условных переходов
+со смещением длиной в слово или двойное слово и
+др. Для таких команд первый байт кода операции
+содержит 0Fh. Внутри байтов кода операции
+определяются некоторые поля, значения которых
+изменяются в зависимости от класса операции. Эти
+поля содержат информацию о направлении передачи
+данных между операндами, размере смещения в
+команде, кодировании регистров и расширении
+знака для операндов. Смысл всех полей в байтах
+кода операции приведен в таблице 1.</p>
+<div align="center"><center>
+
+<table WIDTH="80%" BgColor="#C0C0C0" BorderColorLight="#FFFFFF" BorderColorDark="#000000"
+BORDER="2" RULES="ALL">
+  <caption>Таблица 1. Поля в байтах кода операции</caption>
+  <tr>
+    <td WIDTH="15%" VALIGN="top" bgcolor="#00FFFF">Поле</td>
+    <td WIDTH="10%" VALIGN="top" bgcolor="#00FFFF">Длина, бит</td>
+    <td WIDTH="75%" VALIGN="top" bgcolor="#00FFFF">Описание</td>
+  </tr>
+  <tr>
+    <td WIDTH="15%" VALIGN="top"><i>w</i></td>
+    <td WIDTH="10%" VALIGN="top">1</td>
+    <td WIDTH="75%" VALIGN="top">Определяет размер операнда в
+    один байт (w = 0) или в полный размер (w = 1). Полный
+    размер составляет 16 или 32 бита - см. далее.</td>
+  </tr>
+  <tr>
+    <td WIDTH="15%" VALIGN="top"><i>d</i></td>
+    <td WIDTH="10%" VALIGN="top">1</td>
+    <td WIDTH="75%" VALIGN="top">В двухоперандных командах
+    определяет направление передачи данных: из
+    регистра в регистр/память (d = 0) или из
+    регистра/памяти в регистр (d = 1).</td>
+  </tr>
+  <tr>
+    <td WIDTH="15%" VALIGN="top"><i>s</i></td>
+    <td WIDTH="10%" VALIGN="top">1</td>
+    <td WIDTH="75%" VALIGN="top">Определяет расширение 8-битных
+    непосредственных данных до полного размера (s = 1)
+    ипи нет (s = 0).</td>
+  </tr>
+  <tr>
+    <td WIDTH="15%" VALIGN="top"><i>reg</i></td>
+    <td WIDTH="10%" VALIGN="top">3</td>
+    <td WIDTH="75%" VALIGN="top">Определяет 8/16/32-битный регистр
+    общего назначения.</td>
+  </tr>
+  <tr>
+    <td WIDTH="15%" VALIGN="top"><i>mod r/m</i></td>
+    <td WIDTH="10%" VALIGN="top">2+3</td>
+    <td WIDTH="75%" VALIGN="top">Задание режима адресации.</td>
+  </tr>
+  <tr>
+    <td WIDTH="15%" VALIGN="top"><i>ss</i></td>
+    <td WIDTH="10%" VALIGN="top">2</td>
+    <td WIDTH="75%" VALIGN="top">Масштабный множитель
+    (коэффициент) для режима масштабированной
+    индексной адресации:<br>
+    00b = х1, 01b = х2, 10b = х4, 11b = х8.</td>
+  </tr>
+  <tr>
+    <td WIDTH="15%" VALIGN="top"><i>index</i></td>
+    <td WIDTH="10%" VALIGN="top">3</td>
+    <td WIDTH="75%" VALIGN="top">Определяет регистр общего
+    назначения, используемый как индексный регистр.</td>
+  </tr>
+  <tr>
+    <td WIDTH="15%" VALIGN="top"><i>base</i></td>
+    <td WIDTH="10%" VALIGN="top">3</td>
+    <td WIDTH="75%" VALIGN="top">Определяет регистр общего
+    назначения, используемый как базовый регистр.</td>
+  </tr>
+  <tr>
+    <td WIDTH="15%" VALIGN="top"><i>sreg2</i></td>
+    <td WIDTH="10%" VALIGN="top">2</td>
+    <td WIDTH="75%" VALIGN="top">Определяет один из &quot;старых&quot;
+    сегментных регистров:<br>
+    00b = ES, 01b = CS, 10b = SS, 11b = DS.</td>
+  </tr>
+  <tr>
+    <td WIDTH="15%" VALIGN="top"><i>sreg3</i></td>
+    <td WIDTH="10%" VALIGN="top">3</td>
+    <td WIDTH="75%" VALIGN="top">Определяет любой сегментный
+    регистр:<br>
+    000b = ES, 001b = CS, 010b = SS, 011b = DS, 100b = FS,<br>
+    101b = GS (комбинации 11Оb и 111b не используются).</td>
+  </tr>
+  <tr>
+    <td WIDTH="15%" VALIGN="top"><i>tttn</i></td>
+    <td WIDTH="10%" VALIGN="top">4</td>
+    <td WIDTH="75%" VALIGN="top">В командах условных переходов и
+    установок определяет проверяемое условие.</td>
+  </tr>
+</table>
+</center></div>
+
+<p>Начиная с процессора i80386 система команд
+предыдущих процессоров расширена в двух
+направлениях: 
+
+<ol>
+  <li>Все команды, рассчитанные на 16-битные операнды,
+    работают с 32- битными данными.</li>
+  <li>Для всех команд е обращением к памяти доступны
+    32-битные режимы адресации.</li>
+</ol>
+
+<p>Такое расширение реализовано введением бита D
+(Default) в дескриптор сегмента кода и двух
+префиксов. Когда бит D = 0, команды текущей
+программы работают с 16-битными операндами и
+эффективными адресами, а при D = 1 - с 32-битными.
+(Отметим, что в реальном режиме работы процессора
+дескрипторов нет, но предполагается, что D = 0, т.е.
+размеры операндов и адресов по умолчанию
+принимаются равными 16 битам.)</p>
+
+<p>Два префикса замены размера операнда <i>OperandSize</i>
+и размера адреса <i>AddressSize</i> позволяют изменить
+принимаемые по умолчанию размеры операнда и
+эффективного адреса. При необходимости перед
+байтами кода операции можно указать один или оба
+эти префикса. Наличие префикса переключает
+размер операнда или размер эффективного адреса
+на значение, противоположное принимаемому по
+умолчанию. Если, например, размер операнда по
+умолчанию составляет 32 бита, то наличие префикса <i>OperandSize</i>
+заставляет команду оперировать 16-битными
+данными; если размер эффективного адреса по
+умолчанию равен 16 битам, то наличие префикса <i>AddressSize</i>
+заставляет команду вычислять 32-битный
+эффективный адрес.</p>
+
+<p><b>Поле <i>reg</i></b>. Это поле определяет один из
+регистров общего назначения. Смысловое значение
+этого поля зависит от того, имеется ли в команде
+поле <i>w</i>, а при его наличии еще и от размера
+операнда (см. табл.2).</p>
+
+<a name="t2"></a>
+<div align="center"><center>
+
+<table WIDTH="80%" BgColor="#C0C0C0" BorderColorLight="#FFFFFF" BorderColorDark="#000000"
+BORDER="2" RULES="ALL">
+  <caption>Таблица 2. Кодирование поля <i>reg</i></caption>
+  <tr>
+    <td WIDTH="15%" VALIGN="top" bgcolor="#00FFFF" rowspan="3">Поле<br>
+    <i>reg</i></td>
+    <td WIDTH="30%" VALIGN="top" bgcolor="#00FFFF" colspan="2">Поля <i>w</i> в
+    команде нет</td>
+    <td WIDTH="60%" VALIGN="top" bgcolor="#00FFFF" colspan="4">Поле <i>w</i> в
+    команде имеется</td>
+  </tr>
+  <tr>
+    <td WIDTH="15%" VALIGN="top" bgcolor="#00FFFF" rowspan="2">Операнд<br>
+    16 бит</td>
+    <td WIDTH="15%" VALIGN="top" bgcolor="#00FFFF" rowspan="2">Операнд<br>
+    32 бита</td>
+    <td WIDTH="30%" VALIGN="top" bgcolor="#00FFFF" colspan="2">Операнд 16 бит</td>
+    <td WIDTH="30%" VALIGN="top" bgcolor="#00FFFF" colspan="2">Операнд 32 бита</td>
+  </tr>
+  <tr>
+    <td WIDTH="15%" VALIGN="top" bgcolor="#00FFFF"><i>w</i> = 0</td>
+    <td WIDTH="15%" VALIGN="top" bgcolor="#00FFFF"><i>w</i> = 1</td>
+    <td WIDTH="15%" VALIGN="top" bgcolor="#00FFFF"><i>w</i> = 0</td>
+    <td WIDTH="15%" VALIGN="top" bgcolor="#00FFFF"><i>w</i> = 1</td>
+  </tr>
+  <tr>
+    <td WIDTH="15%" VALIGN="top">000</td>
+    <td WIDTH="15%" VALIGN="top">AX</td>
+    <td WIDTH="15%" VALIGN="top">EAX</td>
+    <td WIDTH="15%" VALIGN="top">AL</td>
+    <td WIDTH="15%" VALIGN="top">AX</td>
+    <td WIDTH="15%" VALIGN="top">AL</td>
+    <td WIDTH="15%" VALIGN="top">EAX</td>
+  </tr>
+  <tr>
+    <td WIDTH="15%" VALIGN="top">001</td>
+    <td WIDTH="15%" VALIGN="top">CX</td>
+    <td WIDTH="15%" VALIGN="top">ECX</td>
+    <td WIDTH="15%" VALIGN="top">CL</td>
+    <td WIDTH="15%" VALIGN="top">CX</td>
+    <td WIDTH="15%" VALIGN="top">CL</td>
+    <td WIDTH="15%" VALIGN="top">ECX</td>
+  </tr>
+  <tr>
+    <td WIDTH="15%" VALIGN="top">010</td>
+    <td WIDTH="15%" VALIGN="top">DX</td>
+    <td WIDTH="15%" VALIGN="top">EDX</td>
+    <td WIDTH="15%" VALIGN="top">DL</td>
+    <td WIDTH="15%" VALIGN="top">DX</td>
+    <td WIDTH="15%" VALIGN="top">DL</td>
+    <td WIDTH="15%" VALIGN="top">EDX</td>
+  </tr>
+  <tr>
+    <td WIDTH="15%" VALIGN="top">011</td>
+    <td WIDTH="15%" VALIGN="top">BX</td>
+    <td WIDTH="15%" VALIGN="top">EBX</td>
+    <td WIDTH="15%" VALIGN="top">BL</td>
+    <td WIDTH="15%" VALIGN="top">BX</td>
+    <td WIDTH="15%" VALIGN="top">BL</td>
+    <td WIDTH="15%" VALIGN="top">EBX</td>
+  </tr>
+  <tr>
+    <td WIDTH="15%" VALIGN="top">100</td>
+    <td WIDTH="15%" VALIGN="top">SP</td>
+    <td WIDTH="15%" VALIGN="top">ESP</td>
+    <td WIDTH="15%" VALIGN="top">AH</td>
+    <td WIDTH="15%" VALIGN="top">SP</td>
+    <td WIDTH="15%" VALIGN="top">AH</td>
+    <td WIDTH="15%" VALIGN="top">ESP</td>
+  </tr>
+  <tr>
+    <td WIDTH="15%" VALIGN="top">101</td>
+    <td WIDTH="15%" VALIGN="top">BP</td>
+    <td WIDTH="15%" VALIGN="top">EBP</td>
+    <td WIDTH="15%" VALIGN="top">CH</td>
+    <td WIDTH="15%" VALIGN="top">BP</td>
+    <td WIDTH="15%" VALIGN="top">CH</td>
+    <td WIDTH="15%" VALIGN="top">EBP</td>
+  </tr>
+  <tr>
+    <td WIDTH="15%" VALIGN="top">110</td>
+    <td WIDTH="15%" VALIGN="top">SI</td>
+    <td WIDTH="15%" VALIGN="top">ESI</td>
+    <td WIDTH="15%" VALIGN="top">DH</td>
+    <td WIDTH="15%" VALIGN="top">SI</td>
+    <td WIDTH="15%" VALIGN="top">DH</td>
+    <td WIDTH="15%" VALIGN="top">ESI</td>
+  </tr>
+  <tr>
+    <td WIDTH="15%" VALIGN="top">111</td>
+    <td WIDTH="15%" VALIGN="top">DI</td>
+    <td WIDTH="15%" VALIGN="top">EDI</td>
+    <td WIDTH="15%" VALIGN="top">BH</td>
+    <td WIDTH="15%" VALIGN="top">DI</td>
+    <td WIDTH="15%" VALIGN="top">BH</td>
+    <td WIDTH="15%" VALIGN="top">EDI</td>
+  </tr>
+</table>
+</center></div>
+
+<p>За исключением команд с неявной адресацией, в
+которых операнд идентифицируется кодом
+операции, режим адресации определяют один или
+два байта адресации, которые находятся после
+байта кода операции. Первым из них является байт <i>mod
+r/m</i>, а вторым - байт <i>sib</i> (масштаб-индекс-база).
+Байт <i>sib</i> может присутствовать только в
+командах с 32-битной адресацией, когда байт <i>mod r/m</i>
+содержит поле <i>r/m</i> = 100b и значение в поле <i>mod</i>
+не равно 11b. При наличии в команде байта <i>sib</i>
+вычисление адреса производится с привлечением
+полей <i>mod, ss, index</i> и <i>base</i>.</p>
+
+<hr>
+
+<p>Следующий раздел - “<a href="04-03.htm">4.3. Адресация
+16-битными указателями</a>”</p>
+</body>
+</html>

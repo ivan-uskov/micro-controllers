@@ -1,0 +1,59 @@
+<html>
+
+<head>
+
+<title>Тип struct позваляет программисту
+объединить несколько компонент в
+переменную с одним именем</title>
+</head>
+<body background="../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Пример 10 </font></b></div></p>
+
+<p align="center">&nbsp;&nbsp;&nbsp; <font size="5"></font></p>
+<p>&nbsp;</p>
+<p><font>Тип struct позваляет
+программисту объединить несколько
+компонент в переменную с одним именем.
+Члены структуры могут быть различных типов.
+В качестве примера определим структуру
+описывающую квартиру. Эта структура будет
+хранить такие признаки квартиры как
+площадь, число комнат, номер, фамилия
+главного квартиросъемщика.</font></p>
+<p><font color="#0000FF" face="Courier New">struct apartment<br>
+{<br>
+&nbsp;&nbsp;&nbsp; int count_rooms;<br>
+&nbsp;&nbsp;&nbsp; int area;<br>
+&nbsp;&nbsp;&nbsp; int number;<br>
+&nbsp;&nbsp;&nbsp; char fio[20];<br>
+};</font></p>
+<p>&nbsp;&nbsp;&nbsp;<font color="#0000FF" face="Courier New"> </font><font>Здесь
+</font><font color="#0000FF" face="Courier New">struct </font><font>-
+это ключевое слово, </font><font color="#0000FF" face="Courier New">apartment</font><font>
+- имя структуры, а </font><font color="#0000FF" face="Courier New">count_rooms</font><font face="Courier New">,</font><font color="#0000FF" face="Courier New">
+area</font><font face="Courier New">,</font><font color="#0000FF" face="Courier New">
+number</font><font> и </font><font color="#0000FF" face="Courier New">fio</font><font>
+члены структуры. Теперь мы можем создавать
+объекты типа </font><font color="#0000FF" face="Courier New"> apartment</font><font face="Courier New">,
+</font><font>они объявляются так же
+как и обычные переменные:</font></p>
+<p><font face="Courier New" color="#0000FF">apartment ap;</font></p>
+<p>&nbsp;&nbsp;&nbsp; <font>Для доступа к
+членам структуры</font> <font face="Courier New" color="#0000FF">ap</font>
+<font>используется оператор
+выбора члена структуры &quot;.&quot;. Допустим мы
+хотим описать какую либо квартиру, то можно
+написать:</font></p>
+<p><font color="#0000FF" face="Courier New">ap.count_rooms = 4;<br>
+	ap.area = 90;<br>
+	ap.number = 112;<br>
+	ap.fio = "Ivanov I.I";</font></p>
+
+<hr>
+<p align="center"><a href="lesson9.html"><font color="#000000">предыдущий
+пример</font></a><font color="#000000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="lesson11.html">следующий пример</a></font></p>
+<p><div align="center"><a href="index.html">	<img src="../soder.gif" width=120 height=31 border=0 alt=""></a></div></p>
+</body>
+
+</html>

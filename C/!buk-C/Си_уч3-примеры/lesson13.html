@@ -1,0 +1,37 @@
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1251">
+<TITLE>Функции</TITLE>
+</HEAD>
+<body background="../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Пример 13 </font></b></div></p>
+<P><!-- saved from url=(0022)http://internet.e-mail --></P>
+
+</FONT><FONT><P>Функции-члены, которые определены внутри структуры, являются встраевыми. Обычно, толь маленькие, часто используемые функции определяются внутри структуры(как в предыдущем уроке). Что бы определить функцию-член вне структуры используется оператор "::". Давайте это наглядно покажем переделав структуру из предыдущего урока.</P>
+</FONT><FONT FACE="Courier New" COLOR="#0000ff"><P>struct stack<BR>
+{<BR>
+&nbsp; char s[1000];<BR>
+&nbsp; int top;<BR>
+&nbsp; void reset();<BR>
+&nbsp; void push(char c);<BR>
+&nbsp; char pop();<BR>
+};&nbsp;</P>
+<P>void stack::reset()<BR>
+{<BR>
+&nbsp; top = -1;<BR>
+}&nbsp;<BR>
+void stack::push(char c)<BR>
+{<BR>
+&nbsp; ++top;<BR>
+&nbsp; s[top] = c;<BR>
+}&nbsp;<BR>
+char stack::pop()<BR>
+{<BR>
+&nbsp; --top;<BR>
+&nbsp; return s[top];<BR>
+}&nbsp;</P>
+</FONT><P>&nbsp;&nbsp;&nbsp;<FONT FACE="Courier New"> </FONT><FONT>Запись</FONT><FONT FACE="Courier New"> </FONT><FONT FACE="Courier New" COLOR="#0000ff">void stack::reset()</FONT><FONT FACE="Courier New"> </FONT><FONT>говорит, что функция</FONT><FONT FACE="Courier New"> </FONT><FONT FACE="Courier New" COLOR="#0000ff">reset()</FONT><FONT FACE="Courier New"> </FONT><FONT>принадлежит структуре</FONT><FONT FACE="Courier New"> </FONT><FONT FACE="Courier New" COLOR="#0000ff">stack</FONT><FONT FACE="Courier New">. </FONT><FONT>Благодаря оператору "::" мы можем иметь одинаковые имена функций для разных типов структур.</P>
+</FONT><P><HR></P>
+<P ALIGN="CENTER"><A HREF="lesson12.html"><FONT>предыдущий пример</FONT></A><FONT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </FONT><A HREF="lesson14.html"><FONT>следующий пример</FONT></A></P>
+<p><div align="center"><a href="index.html">	<img src="../soder.gif" width=120 height=31 border=0 alt=""></a></div></p></BODY>
+</HTML>

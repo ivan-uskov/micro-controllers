@@ -1,0 +1,173 @@
+<html>
+
+<head>
+
+<title>Урок 2</title>
+</head>
+
+<body background="../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Пример 2 </font></b></div></p>
+
+<p class=MsoNormal style='text-align:justify'><span lang=RU 
+;mso-ansi-language:RU'><span style='mso-tab-count:1'>          </span>В
+языке С++ может быть использован модификатор </span><span 
+;color:blue'>const</span><span lang=RU 
+;color:blue;mso-ansi-language:RU'>,</span><span lang=RU
+;mso-ansi-language:RU'> для объявления
+констант (переменные содержание которых нельзя менять). Например: </span><span
+color:blue'>const</span><span
+color:blue;mso-ansi-language:RU'> </span><span
+color:blue'>char</span><span 
+color:blue;mso-ansi-language:RU'> </span><span 
+color:blue'>QUESTION</span><span lang=RU 
+color:blue;mso-ansi-language:RU'>[] = &quot;</span><span 
+color:blue'>What</span><span 
+color:blue;mso-ansi-language:RU'> </span><span 
+color:blue'>is</span><span color:blue;
+mso-ansi-language:RU'> </span><span 
+color:blue'>your</span><span color:blue;
+mso-ansi-language:RU'> </span><span 
+color:blue'>name</span><span lang=RU 
+color:blue;mso-ansi-language:RU'>: &quot;;</span><span lang=RU
+color:black;mso-ansi-language:RU'>-</span><span
+lang=RU ;mso-ansi-language:RU'> здесь мы
+объявили константу </span><span color:blue'>QUESTION</span><span
+color:blue;mso-ansi-language:RU'> </span><span
+lang=RU ;mso-bidi-font-family:
+color:black;mso-ansi-language:RU'>типа </span><span 
+color:blue'>char</span><span color:blue;
+mso-ansi-language:RU'> </span><span lang=RU ;
+mso-bidi-font-family:color:black;mso-ansi-language:RU'>для
+хранения текста, далее нигде в программе ее содержание нельзя менять.</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span lang=RU 
+;mso-bidi-font-family:color:black;mso-ansi-language:
+RU'><span style='mso-tab-count:1'>          </span>В программах отдельные
+задачи лучше разделять по функциям. Обычная функция имеет вид:</span></p>
+
+<p class=MsoNormal style='text-align:justify'><font face="Courier New"><span
+style='mso-bidi-font-family: Courier New; color: blue'><i>Return_type name(param_type param)<br>
+</i></span></font>&nbsp;<font face="Courier New"><span
+style='mso-bidi-font-family: Courier New; color: blue'><i>{</i></span></font><i><font face="Courier New"><span
+style='mso-bidi-font-family: Courier New; color: blue'><span style='mso-tab-count:1'><br>
+&nbsp;&nbsp;&nbsp;&nbsp; </span>//</span></font></i><font face="Courier New"><i><span
+lang=RU style='mso-bidi-font-family: Courier New; color: blue; mso-ansi-language: RU'>тело функции</span><span
+style='mso-bidi-font-family: Courier New; color: blue'>;</span></i></font><i><span
+style='mso-bidi-font-family: Courier New; color: blue'><font face="Courier New"><br>
+}</font></span></i></p>
+
+<p class=MsoNormal style='text-align:justify;text-indent:36.0pt'><span lang=RU
+;mso-ansi-language:RU'>Где </span><i><font face="Courier New"><span
+style='color: blue'>Return</span></font></i><font face="Courier New"><i><span
+lang=RU ;color:blue;mso-ansi-language:
+RU'>_</span><span ;color:blue'>type</span></i></font><i><span
+lang=RU ;color:blue;mso-ansi-language:
+RU'> -<span style="mso-spacerun: yes">  </span></span></i><span lang=RU
+;mso-ansi-language:RU'>тип возвращаемого
+функцией результата, </span><i><span style='color: blue'><font face="Courier New">name</font></span></i><span lang=RU ;
+mso-ansi-language:RU'> - имя функции, </span><font face="Courier New"><i><span style='color: blue'>param</span><span lang=RU ;
+color:blue;mso-ansi-language:RU'>_</span><span ;
+color:blue'>type</span></i></font><i><span ;
+color:blue;mso-ansi-language:RU'> </span></i><span lang=RU 
+;mso-ansi-language:RU'>- тип параметра передаваемого
+функции, </span><i><span style='color: blue'><font face="Courier New">param</font></span></i><span
+lang=RU ;mso-ansi-language:RU'> - имя
+параметра, которое будет использоваться внутри функции. Например, из программы
+предыдущего урока, печать приветствия можно выделить в отдельную функцию.</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='color: blue'><font face="Courier New" size="2">#include &lt;iostream.h&gt;</font></span></p>
+
+<p class=MsoNormal style='text-align:justify'><font face="Courier New" size="2"><span style='color: blue'>const char QUESTION[] = &quot;What is your name: &quot;;<span
+style='mso-tab-count:1'>  </span>//</span><span lang=RU style='color: blue; mso-ansi-language: RU'>объявляем</span><span lang=RU
+color:blue'> </span><span lang=RU
+color:blue;mso-ansi-language:RU'>константу</span><span style='color: blue'><br>
+const char HELLO[] = &quot;Hello: &quot;;<span style='mso-tab-count:
+2'>       </span>//</span><span lang=RU style='color: blue; mso-ansi-language: RU'>объявляем</span><span lang=RU
+color:blue'> </span><span lang=RU
+color:blue;mso-ansi-language:RU'>константу</span></font></p>
+
+<p class=MsoNormal style='text-align:justify'><font face="Courier New" size="2"><span style='color: blue'>void print_name(char* name)<span style='mso-tab-count:3'>           </span>//</span><span
+lang=RU style='color: blue; mso-ansi-language: RU'>объявляем</span><span
+lang=RU color:blue'> </span><span lang=RU
+color:blue;mso-ansi-language:RU'>функцию</span></font><span style='color: blue'><font face="Courier New" size="2"><br>
+{</font></span><font face="Courier New" size="2"><span style='color: blue'><span style='mso-tab-count:1'><br>
+     </span>cout</span><span lang=RU
+color:blue;mso-ansi-language:RU'> &lt;&lt; </span><span
+color:blue'>HELLO</span><span lang=RU
+color:blue;mso-ansi-language:RU'> &lt;&lt; </span><span
+color:blue'>name</span><span lang=RU
+color:blue;mso-ansi-language:RU'> &lt;&lt; </span><span
+color:blue'>endl</span><span lang=RU
+color:blue;mso-ansi-language:RU'>;<span
+style='mso-tab-count:1'>    </span>//печать приветствия</span></font><span style='color: blue'><font face="Courier New" size="2"><br>
+}</font></span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='color: blue'><font face="Courier New" size="2">int main()<br>
+{</font></span><font face="Courier New" size="2"><span style='color: blue'><span style='mso-tab-count:1'><br>
+     </span>char</span><span
+color:blue;mso-ansi-language:RU'> </span><span
+color:blue'>name</span><span lang=RU
+color:blue;mso-ansi-language:RU'>[20];<span
+style='mso-tab-count:4'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>//объявления массива</span><span style='mso-tab-count: 1; color: blue; mso-ansi-language: RU' lang="RU"><br>
+     </span><span
+color:blue'>cout</span><span lang=RU
+color:blue;mso-ansi-language:RU'> &lt;&lt; </span><span
+color:blue'>QUESTION</span><span lang=RU
+color:blue;mso-ansi-language:RU'>;<span
+style='mso-tab-count:3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>//печатаем вопрос</span><span style='mso-tab-count: 1; color: blue; mso-ansi-language: RU' lang="RU"><br>
+     </span><span
+color:blue'>cin</span><span lang=RU
+color:blue;mso-ansi-language:RU'> &gt;&gt; </span><span
+color:blue'>name</span><span lang=RU
+color:blue;mso-ansi-language:RU'>;<span
+style='mso-tab-count:4'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>//считываем данные в массив </span><span
+color:blue'>name<br>
+</span><span style='mso-tab-count: 1; color: blue; mso-ansi-language: RU' lang="RU">    
+</span><span
+color:blue'>print_name(name);<span
+style='mso-tab-count:3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>//</span><span lang=RU
+color:blue;mso-ansi-language:RU'>вызываем</span><span
+lang=RU color:blue'> </span><span lang=RU
+color:blue;mso-ansi-language:RU'>функцию</span><span
+color:blue'> print_name<br>
+</span></font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span lang=RU style='color: blue; mso-ansi-language: RU'><font face="Courier New" size="2">//для печати приветствия</font></span><font face="Courier New" size="2"><span style='mso-tab-count: 1; color: blue; mso-ansi-language: RU' lang="RU"><br>
+     </span><span
+style='color: blue'>return</span><span lang=RU
+color:blue;mso-ansi-language:RU'> 0;</span></font><span lang=RU style='color: blue; mso-ansi-language: RU'><font face="Courier New" size="2"><br>
+}</font></span></p>
+
+<A href="Examples/l2_var1.rar">Текст программы</a><br>
+<A href="Examples/l2_var1.exe">Запустить пример</a>
+
+<p class=MsoNormal style='text-align:justify'>&nbsp;<span style='mso-tab-count:
+1'>          </span><span lang=RU ;
+mso-bidi-font-family:color:black;mso-ansi-language:RU'>В нашем
+случае функция </span><span color:blue'>print</span><span
+lang=RU color:blue;mso-ansi-language:RU'>_</span><span
+color:blue'>name</span><span lang=RU
+;mso-bidi-font-family:
+color:black;mso-ansi-language:RU'> ничего не возвращает и поэтому имеет тип
+возвращаемого результата </span><span 
+color:blue'>void</span><span lang=RU 
+color:blue;mso-ansi-language:RU'>. </span><span lang=RU 
+;mso-bidi-font-family:color:black;mso-ansi-language:
+RU'>В качестве параметра ей передается строка </span><span 
+color:blue'>name</span><span 
+color:blue;mso-ansi-language:RU'> </span><span lang=RU ;
+mso-bidi-font-family:color:black;mso-ansi-language:RU'>типа </span><span
+color:blue'>char</span><span lang=RU
+color:blue;mso-ansi-language:RU'>.</span>&nbsp;</p>
+
+<hr>
+
+<p class=MsoNormal align="center"><font color="#000000"><a href="lesson1.html">предыдущий
+пример</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="lesson3.html">следующий
+пример</a></font></p>
+
+</div>
+<p><div align="center"><a href="index.html">	<img src="../soder.gif" width=120 height=31 border=0 alt=""></a></div></p>
+</body>
+
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0045)http://www.chat.ru/~win32asm/hello_world.html -->
+<HTML><HEAD><TITLE>Hello, world! ;)</TITLE>
+</HEAD>
+<BODY background="../../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial"> </font></b></div></p>
+
+<P>Это, наверное, самая простая программа.<BR>Используются всего две 
+функции:<BR><IMG src="hello_world.files/strelka.gif" width=13 
+heigth="13">&nbsp;&nbsp;&nbsp;<I>MessageBoxA</I>&nbsp; из USER32.DLL и<BR><IMG 
+src="hello_world.files/strelka.gif" width=13 
+heigth="13">&nbsp;&nbsp;&nbsp;<I>ExitProcess</I>&nbsp; из 
+KERNEL32.DLL.<BR>Суффикс A у MessageBox означает, что функция работает с 
+однобайтовыми<BR>ANSI строками. Для двубайтных Unicode строк - суффикс W, e.g. 
+MessageBoxW.<BR>Сама функция MessageBox выводит сообщение в отдельном оконе, ее 
+прототип:</P><PRE class=dtext2>int MessageBox(
+&nbsp;&nbsp;HWND <I>hWnd,</I>
+&nbsp;&nbsp;LPCSTR <I>lpText,</I>
+&nbsp;&nbsp;LPCSTR <I>lpCaption,</I>
+&nbsp;&nbsp;UINT <I>uType</I>
+);</PRE>
+<P>Параметры:<BR>&nbsp;<I>hWnd</I> - идентификатор окна, из которого вызывается 
+MessageBox<BR>&nbsp;<I>lpText</I> - указатель на null-terminated строку, 
+содержущая &nbsp;текст сообщения<BR>&nbsp;<I>lpCaption</I> - указатель на 
+null-terminated строку, содержущая &nbsp;заголовок 
+сообщения<BR>&nbsp;<I>uType</I> - вид диалогового окна<BR><BR>Функция 
+ExitProcess заканчивает процесс и все образованные процессы из этого 
+процесса.</P><PRE class=dtext2>VOID ExitProcess(
+  UINT <I>uExitCode,</I>
+);</PRE>
+<P>&nbsp;<I>uExitCode</I> - код выхода<BR><BR>Параметры функции передаются по 
+следующей схеме:</P><PRE class=dtext2>    AnyFunction(first_param, second_param, third_param);
+
+    push    [third_param]
+    push    [second_param]
+    push    [first_param]
+    call    AnyFunction
+</PRE>или <PRE class=dtext2>    call    AnyFunction, [first_param], [second_param], [third_param]
+</PRE><BR>
+<P>Вот сама программа:</P><PRE class=dtext2>.386
+.model flat
+
+extrn            MessageBoxA:proc
+extrn            ExitProcess:proc
+
+.data
+
+mb_text          db 'Hello, World!',0
+mb_caption       db 'My first program',0
+
+.code
+start:
+                 push   0
+                 push   offset mb_caption
+                 push   offset mb_text
+                 push   0
+                 call   MessageBoxA
+                 push   0
+                 call   ExitProcess
+
+ends
+end start
+</PRE>
+<P>Программу можно взять <A 
+href="messbox.zip">здесь</A></P>
+<p><div align="center"><a href="index.htm">	<img src="../../soder.gif" width=120 height=31 border=0 alt=""></a></div></p>
+</BODY></HTML>

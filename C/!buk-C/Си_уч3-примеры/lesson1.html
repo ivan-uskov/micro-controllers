@@ -1,0 +1,258 @@
+<html>
+
+<head>
+
+<title>Любая программа на С или С++ начинает свое выполнение с функции main()</title>
+</head>
+<body background="../bgrwhite.gif">
+<p><div align="center"><b><font size="+1" face="Arial">Пример 1 </font></b></div></p>
+
+<h3 align="center"><span lang=RU style=''>Первая программа</span></h3>
+
+<p class=MsoNormal style='text-align:justify;text-indent:36.0pt'><span lang=RU
+style=';mso-ansi-language:RU'>Любая программа на
+С или С++ начинает свое выполнение с функции </span><span style='font-family:
+"Bookman Old Style"'>main</span><span lang=RU style=';
+mso-ansi-language:RU'>(). Напишем нашу первую программу. Для этого создадим
+файл </span><span style=''>main</span><span
+lang=RU style=';mso-ansi-language:RU'>.</span><span
+style=''>cpp</span><span lang=RU
+style=';mso-ansi-language:RU'> и напишем текст:</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-family: Courier New'><font color="#0000FF">#include &lt;iostream.h&gt;<br>
+<br>
+int main()<br>
+{</font></span><span
+style='font-family: Courier New'><font color="#0000FF"><br>
+&nbsp;&nbsp;&nbsp;</font></span> <font color="#0000FF"><span
+style='font-family: Courier New'>cout &lt;&lt; &quot;Hello
+C++\n&quot; ;<br>
+&nbsp;&nbsp;&nbsp;</span></font> <font color="#0000FF"><span
+style='font-family: Courier New'>return 0;</span></font><span lang=RU style='font-family: Courier New; mso-ansi-language: RU'><font color="#0000FF"><br>
+}</font></span></p>
+
+<A href="Examples/l1_var1.rar">Текст программы</a><br>
+<A href="Examples/l1_var1.exe">Запустить пример</a>
+
+<p class=MsoBodyTextIndent><span lang=RU>Скомпилировав и запустив нашу
+программу мы должны получить на экране:</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='color:#3366FF'>Hello
+C++</span></p>
+
+<p class=MsoNormal style='text-align:justify;text-indent:36.0pt'><span lang=RU
+style=';mso-ansi-language:RU'>В первой строке
+программы мы написали директиву <span style='color:#3366FF'>#</span></span><span
+style=';color:#3366FF'>include</span><span
+lang=RU style=';color:#3366FF;mso-ansi-language:
+RU'> &lt;</span><span style=';color:#3366FF'>iostream</span><span
+lang=RU style=';color:#3366FF;mso-ansi-language:
+RU'>.</span><span style=';color:#3366FF'>h</span><span
+lang=RU style=';color:#3366FF;mso-ansi-language:
+RU'>&gt;</span><span lang=RU style=';mso-ansi-language:
+RU'>, она подключает библиотеку ввода-вывода </span><span style='font-family:
+"Bookman Old Style"'>iostream</span><span lang=RU style=';
+mso-ansi-language:RU'>.</span><span style=''>h</span><span
+lang=RU style=';mso-ansi-language:RU'>, без
+которой компилятор не поймет определенные в ней функции </span><span
+style=';color:#3366FF'>cout</span><span lang=RU
+style=';mso-ansi-language:RU'>. Скобки { и }
+обрамляют начало и конец функции потом мы увидим, что они используются и для
+других целей. В С++<span style="mso-spacerun: yes">  </span>каждый оператор, а
+также каждая строка с обращением к функции заканчивается точкой с запятой,
+исключения составляют команды препроцессора и имена функций стоящие в начале
+программной единицы (например, у нас в программе </span><span style='font-family:
+"Bookman Old Style"'>main</span><span lang=RU style=';
+mso-ansi-language:RU'>()). В строке </span><span style=';
+color:#3366FF'>cout</span><span lang=RU style=';
+color:#3366FF;mso-ansi-language:RU'> &lt;&lt; &quot;</span><span
+style=';color:#3366FF'>Hello</span><span
+style=';color:#3366FF;mso-ansi-language:RU'> </span><span
+style=';color:#3366FF'>C</span><span lang=RU
+style=';color:#3366FF;mso-ansi-language:RU'>++\</span><span
+style=';color:#3366FF'>n</span><span lang=RU
+style=';color:#3366FF;mso-ansi-language:RU'>&quot;</span><span
+lang=RU style=';color:black;mso-ansi-language:
+RU'>, </span><span style=';color:#3366FF'>cout</span><span
+style=';color:#3366FF;mso-ansi-language:RU'> </span><span
+lang=RU style=';color:black;mso-ansi-language:
+RU'>– это стандартный поток вывода, оператором </span><span lang=RU
+style=';color:#3366FF;mso-ansi-language:RU'>&lt;&lt;
+</span><span lang=RU style=';color:black;
+mso-ansi-language:RU'>мы помещаем в него строку </span><span style='font-family:
+"Bookman Old Style";color:#3366FF'>Hello</span><span style=';
+color:#3366FF;mso-ansi-language:RU'> </span><span style=';
+color:#3366FF'>C</span><span lang=RU style=';
+color:#3366FF;mso-ansi-language:RU'>++, </span><span lang=RU style='font-family:
+"Bookman Old Style";color:black;mso-ansi-language:RU'>константа</span><span
+lang=RU style=';color:#3366FF;mso-ansi-language:
+RU'> \</span><span style=';color:#3366FF'>n</span><span
+style=';color:#3366FF;mso-ansi-language:RU'> </span><span
+lang=RU style=';color:black;mso-ansi-language:
+RU'>переводит каретку на новую строку.</span></p>
+
+<h3 align="center"><span lang=RU style=''>Основные типы данных</span></h3>
+
+<p class=MsoNormal style='text-align:justify'><span lang=RU style='font-family:
+"Bookman Old Style";mso-ansi-language:RU'><span style='mso-tab-count:1'>          </span>Основные
+типы данных разделяются на три категории: целочисленные, с плавающей точкой и
+неопределенные(</span><span style=''>void</span><span
+lang=RU style=';mso-ansi-language:RU'>).
+Целочисленные типы данных работают с целыми числами. Типы данных с плавающей
+точкой работают с данными имеющими дробную часть. Неопределенный тип данных
+соответствует пустому множеству значений.</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span lang=RU style='font-family:
+"Bookman Old Style";mso-ansi-language:RU'><span style='mso-tab-count:1'>          </span>Основными
+типами данных являются:</span></p>
+
+<ul style='margin-top:0cm' type=disc>
+ <li class=MsoNormal style='text-align:justify;mso-list:l0 level1 lfo1;
+     tab-stops:list 36.0pt'><span style=''>char</span><span
+     lang=RU style=';mso-ansi-language:RU'> –
+     целочисленный тип, содержит символы.</span></li>
+ <li class=MsoNormal style='text-align:justify;mso-list:l0 level1 lfo1;
+     tab-stops:list 36.0pt'><span style=''>int</span><span
+     lang=RU style=';mso-ansi-language:RU'> –
+     является целочисленным типом, содержит целые цифры.</span></li>
+ <li class=MsoNormal style='text-align:justify;mso-list:l0 level1 lfo1;
+     tab-stops:list 36.0pt'><span style=''>short</span><span
+     lang=RU style=';mso-ansi-language:RU'> –
+     тип данных </span><span style=''>short</span><span
+     style=';mso-ansi-language:RU'> </span><span
+     style=''>int</span><span lang=RU
+     style=';mso-ansi-language:RU'> (или
+     сокращенно </span><span style=''>short</span><span
+     lang=RU style=';mso-ansi-language:RU'>)
+     является целочисленным типом, содержащим целые числа, по размеру меньше
+     или равен типу </span><span style=''>int</span><span
+     lang=RU style=';mso-ansi-language:RU'>.</span></li>
+ <li class=MsoNormal style='text-align:justify;mso-list:l0 level1 lfo1;
+     tab-stops:list 36.0pt'><span style=''>long</span><span
+     lang=RU style=';mso-ansi-language:RU'> -
+     тип данных </span><span style=''>long</span><span
+     style=';mso-ansi-language:RU'> </span><span
+     style=''>int</span><span lang=RU
+     style=';mso-ansi-language:RU'> (или
+     сокращенно </span><span style=''>long</span><span
+     lang=RU style=';mso-ansi-language:RU'>)
+     является целочисленным типом, содержащим целые числа, по размеру больше
+     или равен типу </span><span style=''>int</span><span
+     lang=RU style=';mso-ansi-language:RU'>.</span></li>
+ <li class=MsoNormal style='text-align:justify;mso-list:l0 level1 lfo1;
+     tab-stops:list 36.0pt'><span style=''>double</span><span
+     lang=RU style=';mso-ansi-language:RU'> –
+     тип данных с плавающей точкой.</span></li>
+ <li class=MsoNormal style='text-align:justify;mso-list:l0 level1 lfo1;
+     tab-stops:list 36.0pt'><span style=''>float</span><span
+     lang=RU style=';mso-ansi-language:RU'> –
+     наименьший тип данных с плавающей точкой.</span></li>
+ <li class=MsoNormal style='text-align:justify;mso-list:l0 level1 lfo1;
+     tab-stops:list 36.0pt'><span style=''>long</span><span
+     style=';mso-ansi-language:RU'> </span><span
+     style=''>double</span><span lang=RU
+     style=';mso-ansi-language:RU'> – тип данных
+     с плавающей точкой больше чем </span><span style=''>double</span><span
+     lang=RU style=';mso-ansi-language:RU'>.</span></li>
+</ul>
+
+<p class=MsoNormal style='margin-left:18.0pt;text-align:justify'><span lang=RU
+style=';mso-ansi-language:RU'>Нашу программу
+можно модифицировать:</span></p>
+
+<p class=MsoNormal style='margin-left:18.0pt;text-align:justify'><span
+style='font-family:"Courier New";color:blue'>#include &lt;iostream.h&gt;</span></p>
+
+<p class=MsoNormal style='margin-left:18.0pt;text-align:justify'><span
+style='font-family:"Courier New";color:blue'>int main()<br>
+{<span style='mso-tab-count:1'><br>
+  </span>char
+name[20];<span style='mso-tab-count:1'><br>
+  </span>cout
+&lt;&lt; &quot;What is your name: &quot;;<span style='mso-tab-count:1'><br>
+  </span>cin
+&gt;&gt; name;<span style='mso-tab-count:1'><br>
+  </span>cout
+&lt;&lt; &quot;Hello: &quot; &lt;&lt; name &lt;&lt; endl;<span style='mso-tab-count:1'><br>
+  </span></span><span
+lang=RU style='font-family:"Courier New";color:blue;mso-ansi-language:RU'>return
+0;<br>
+}</span></p>
+
+<A href="Examples/l1_var2.rar">Текст программы</a><br>
+<A href="Examples/l1_var2.exe">Запустить пример</a>
+
+<p class=MsoNormal style='text-align:justify'><span lang=RU style='font-family:
+"Bookman Old Style";mso-ansi-language:RU'><span style='mso-tab-count:1'>          </span>После
+запуска она должна выдать на экране вопрос </span><span lang=RU
+style=';mso-bidi-font-family:"Courier New";
+color:black;mso-ansi-language:RU'>&quot;</span><span style=';
+mso-bidi-font-family:"Courier New";color:black'>What</span><span
+style=';mso-bidi-font-family:"Courier New";
+color:black;mso-ansi-language:RU'> </span><span style=';
+mso-bidi-font-family:"Courier New";color:black'>is</span><span
+style=';mso-bidi-font-family:"Courier New";
+color:black;mso-ansi-language:RU'> </span><span style=';
+mso-bidi-font-family:"Courier New";color:black'>your</span><span
+style=';mso-bidi-font-family:"Courier New";
+color:black;mso-ansi-language:RU'> </span><span style=';
+mso-bidi-font-family:"Courier New";color:black'>name</span><span lang=RU
+style=';mso-bidi-font-family:"Courier New";
+color:black;mso-ansi-language:RU'>:&quot;, мы соответственно должны ввести имя,
+например “</span><span style=';mso-bidi-font-family:
+"Courier New";color:black'>Pupkin</span><span lang=RU style=';
+mso-bidi-font-family:"Courier New";color:black;mso-ansi-language:RU'>”, на это
+программа должна выдать:</span></p>
+
+<p class=MsoNormal style='text-align:justify;text-indent:36.0pt'><span
+style='font-family:"Courier New";color:blue'>What is your name: Pupkin</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-family:"Courier New";
+color:black'><span style='mso-tab-count:1'>     </span></span><span
+style='font-family:"Courier New";color:blue'>Hello: Pupkin</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style=';
+mso-bidi-font-family:"Courier New";color:blue'><span style='mso-tab-count:1'>          </span></span><span
+lang=RU style=';mso-bidi-font-family:"Courier New";
+color:black;mso-ansi-language:RU'>В строке </span><span style='font-family:
+"Courier New";color:blue'>char</span><span style='font-family:"Courier New";
+color:blue;mso-ansi-language:RU'> </span><span style='font-family:"Courier New";
+color:blue'>name</span><span lang=RU style='font-family:"Courier New";
+color:blue;mso-ansi-language:RU'>[20]; </span><span lang=RU style='font-family:
+"Bookman Old Style";mso-bidi-font-family:"Courier New";color:black;mso-ansi-language:
+RU'>мы объявляем массив </span><span style='font-family:"Courier New";
+color:blue'>name</span><span lang=RU style=';
+mso-bidi-font-family:"Courier New";color:black;mso-ansi-language:RU'> типа </span><span
+style='font-family:"Courier New";color:blue'>char</span><span style='font-family:
+"Courier New";color:blue;mso-ansi-language:RU'> </span><span lang=RU
+style=';mso-bidi-font-family:"Courier New";
+color:black;mso-ansi-language:RU'>из 20 элементов, это значит что в массиве </span><span
+style='font-family:"Courier New";color:blue'>name</span><span style='font-family:
+"Courier New";color:blue;mso-ansi-language:RU'> </span><span lang=RU
+style=';mso-bidi-font-family:"Courier New";
+color:black;mso-ansi-language:RU'>может хранится не более 20 символов
+(подробнее о массивах мы поговорим в следующих уроках). В строке </span><span
+style='font-family:"Courier New";color:blue'>cin</span><span lang=RU
+style='font-family:"Courier New";color:blue;mso-ansi-language:RU'> &gt;&gt; </span><span
+style='font-family:"Courier New";color:blue'>name</span><span lang=RU
+style='font-family:"Courier New";color:blue;mso-ansi-language:RU'>;</span><span
+lang=RU style=';mso-bidi-font-family:"Courier New";
+color:black;mso-ansi-language:RU'> мы из стандартного потока ввода </span><span
+style='font-family:"Courier New";color:blue'>cin</span><span lang=RU
+style=';mso-bidi-font-family:"Courier New";
+color:black;mso-ansi-language:RU'> помещаем данные в наш массив </span><span
+style='font-family:"Courier New";color:blue'>name</span><span lang=RU
+style=';mso-bidi-font-family:"Courier New";
+color:black;mso-ansi-language:RU'>, в данном случае данные поступают с
+клавиатуры.</span></p>
+
+
+<p class=MsoNormal align=center style='text-align:center'><a href="lesson2.html"><font color="#000000">следующий
+пример</font></a></p>
+
+
+</div>
+<p><div align="center"><a href="index.html">	<img src="../soder.gif" width=120 height=31 border=0 alt=""></a></div></p>
+</body>
+
+</html>

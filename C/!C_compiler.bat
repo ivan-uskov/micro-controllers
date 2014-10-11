@@ -1,0 +1,1 @@
+start C:\MinGW\bin\gcc.exe %1 -o %2
